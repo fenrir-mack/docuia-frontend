@@ -42,7 +42,15 @@ async function handleResponse(response) {
     const data = await response.json().catch(() => null);
     
     if (!response.ok) {
-        const errorMsg = data && data.detail ? data.detail : "Ocorreu um erro na requisição.";
+        let errorMsg = "Ocorreu um erro na requisição.";
+        if (data && data.detail) {
+            if (Array.isArray(data.detail)) {
+                // Erros de validação do FastAPI (422) vêm em uma lista
+                errorMsg = data.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join('\n');
+            } else {
+                errorMsg = data.detail;
+            }
+        }
         throw new Error(errorMsg);
     }
     
