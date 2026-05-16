@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Empresas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <script src="/api-config.js"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+</head>
+
+<body class="dashboard-body">
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <h2>DocuIA</h2>
+        <p>Documentação Inteligente</p>
+    </div>
+
+    <nav class="menu">
+        <a href="/dashboard">
+            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+        </a>
+        <a class="active" href="/empresas">
+            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
+        </a>
+        <a href="/projetos">
+            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+
+
+        <div class="user-dropdown-area">
+            <div class="user-menu" id="userMenu">
+                <a href="/perfil">♙ Meu Perfil</a>
+
+
+                <div class="menu-divider"></div>
+
+                <a href="/login" class="logout-link">↪ Sair</a>
+            </div>
+
+            <button class="user-box user-toggle" onclick="toggleUserMenu()">
+                <div class="profile-mini-avatar">U</div>
+
+                <div class="user-info">
+                    <strong id="sidebar-user-name">Usuário</strong>
+                    <p id="sidebar-user-email">email@exemplo.com</p>
+                </div>
+
+                <span class="dropdown-arrow">⌄</span>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<main class="dashboard-main">
+
+    <section class="companies-content">
+
+        <header class="companies-header">
+            <div>
+                <h1>Minhas Empresas</h1>
+                <p>Gerencie suas organizações e empresas</p>
+            </div>
+
+            <button class="new-company-btn" id="btn-nova-empresa">
+                + Nova Empresa
+            </button>
+        </header>
+
+        <div class="company-search">
+            <span>⌕</span>
+            <input type="text" placeholder="Buscar empresas...">
+        </div>
+
+        <section class="companies-grid" id="companies-grid">
+            <!-- Empresas serão carregadas aqui via JS -->
+            <p style="padding: 20px; grid-column: 1/-1; text-align: center; color: #666;">Carregando empresas...</p>
+        </section>
+
+    </section>
+
+</main>
+
+<div class="help-btn">?</div>
+
+<script>
+async function loadCompanies() {
+    try {
+        // 1. Carregar Perfil (Sidebar)
+        const userResp = await fetch(API_URLS.auth + "/perfil/me", { headers: authHeaders() });
+        const user = await handleResponse(userResp);
+        document.getElementById('sidebar-user-name').innerText = user.nome;
+        document.getElementById('sidebar-user-email').innerText = user.email;
+
+        // 2. Carregar Empresas
+        const resp = await fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() });
+        const companies = await handleResponse(resp);
+        renderCompanies(companies);
+
+    } catch (error) {
+        console.error("Erro ao carregar empresas:", error);
+    }
+}
+
+function renderCompanies(companies) {
+    const grid = document.getElementById('companies-grid');
+    if (companies.length === 0) {
+        grid.innerHTML = '<p style="padding: 40px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não participa de nenhuma empresa.</p>';
+        return;
+    }
+
+    const colors = ['purple', 'green', 'red-orange', 'blue'];
+
+    grid.innerHTML = companies.map((c, index) => `
+        <article class="company-card" onclick="window.location.href='/empresa?id=${c.id}'" style="cursor: pointer;">
+            <div class="company-card-top">
+                <div class="company-big-icon ${colors[index % colors.length]}">▤</div>
+                <span class="dots">⋮</span>
+            </div>
+            <h2>${c.nome}</h2>
+            <div class="badges">
+                ${c.dono_id === parseInt(localStorage.getItem('user_id')) ? '<span class="badge owner">♕ Proprietário</span>' : '<span class="badge">Membro</span>'}
+            </div>
+            <div class="company-card-footer">
+                <span><img src="/static/pngs/users.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> Membros</span>
+                <span><img src="/static/pngs/folder.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> Projetos</span>
+            </div>
+        </article>
+    `).join('');
+}
+
+// Abrir Modal de Opções de Empresa
+document.getElementById('btn-nova-empresa').addEventListener('click', () => {
+    document.getElementById('company-options-modal').classList.add('show');
+});
+
+function closeCompanyModal() {
+    document.getElementById('company-options-modal').classList.remove('show');
+}
+
+// Opção: Criar Nova Empresa
+function openCreateCompanyPrompt() {
+    closeCompanyModal();
+    document.getElementById('create-company-modal').classList.add('show');
+}
+
+function backToOptionsFromCreate() {
+    document.getElementById('create-company-modal').classList.remove('show');
+    document.getElementById('company-options-modal').classList.add('show');
+}
+
+async function submitCreateCompany() {
+    const nome = document.getElementById('create-empresa-nome').value;
+    if (!nome) return alert("O nome da empresa é obrigatório.");
+    const descricao = document.getElementById('create-empresa-desc').value;
+
+    const btn = document.querySelector('#create-company-modal .modal-footer-btns .btn-acao');
+    try {
+        btn.innerText = "Criando..."; 
+        btn.disabled = true;
+
+        const resp = await fetch(API_URLS.empresas + "/empresas", {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ nome, descricao })
+        });
+        await handleResponse(resp);
+        
+        document.getElementById('create-company-modal').classList.remove('show');
+        document.getElementById('create-empresa-nome').value = '';
+        document.getElementById('create-empresa-desc').value = '';
+        
+        alert("Empresa criada com sucesso!");
+        loadCompanies();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = "Criar Empresa"; 
+        btn.disabled = false;
+    }
+}
+
+// Opção: Entrar em uma Empresa
+function openJoinCompanyPrompt() {
+    closeCompanyModal();
+    document.getElementById('join-company-modal').classList.add('show');
+}
+
+function backToOptionsFromJoin() {
+    document.getElementById('join-company-modal').classList.remove('show');
+    document.getElementById('company-options-modal').classList.add('show');
+}
+
+async function submitJoinCompany() {
+    const codigo = document.getElementById('join-empresa-codigo').value.trim();
+    if (!codigo) return alert("O código de convite é obrigatório.");
+    
+    // O código esperado é no formato DOCUIA-E[id], ex: DOCUIA-E1
+    const match = codigo.match(/DOCUIA-E(\d+)/i);
+    if (!match) return alert("Código de convite inválido. O formato deve ser DOCUIA-E seguido do número.");
+    const empresaId = match[1];
+
+    const btn = document.querySelector('#join-company-modal .modal-footer-btns .btn-acao');
+    try {
+        btn.innerText = "Solicitando..."; 
+        btn.disabled = true;
+
+        const resp = await fetch(API_URLS.empresas + "/empresas/" + empresaId + "/solicitacoes", {
+            method: "POST",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        
+        document.getElementById('join-company-modal').classList.remove('show');
+        document.getElementById('join-empresa-codigo').value = '';
+        document.getElementById('join-empresa-msg').value = '';
+        
+        alert("Solicitação enviada com sucesso!");
+        loadCompanies();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = "Solicitar Entrada"; 
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadCompanies);
+
+// Toggle menu logic
+function toggleUserMenu() {
+    const menu = document.getElementById("userMenu");
+    menu.classList.toggle("show");
+}
+window.addEventListener("click", function(e) {
+    const menu = document.getElementById("userMenu");
+    const button = document.querySelector(".user-toggle");
+    if (menu && !menu.contains(e.target) && button && !button.contains(e.target)) {
+        menu.classList.remove("show");
+    }
+});
+</script>
+
+<!-- MODAL DE OPÇÕES DE EMPRESA -->
+<div id="company-options-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 8px;">Empresa</h2>
+        <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">Escolha uma opção:</p>
+
+        <button class="modal-option-btn" onclick="openCreateCompanyPrompt()">
+            <div class="option-icon blue-bg">
+                <img src="{{ url_for('static', filename='pngs/plus.png') }}" style="width: 20px;" alt="+">
+            </div>
+            <div class="option-text">
+                <h3>Criar Nova Empresa</h3>
+                <p>Crie e gerencie sua própria empresa</p>
+            </div>
+        </button>
+
+        <button class="modal-option-btn" onclick="openJoinCompanyPrompt()">
+            <div class="option-icon green-bg">
+                <img src="{{ url_for('static', filename='pngs/users.png') }}" style="width: 22px;" alt="Users">
+            </div>
+            <div class="option-text">
+                <h3>Entrar em uma Empresa</h3>
+                <p>Use um código de convite para entrar</p>
+            </div>
+        </button>
+
+        <button class="modal-cancel-btn" onclick="closeCompanyModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL CRIAR NOVA EMPRESA -->
+<div id="create-company-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 24px;">Criar Nova Empresa</h2>
+        
+        <div class="modal-form-group">
+            <label>Nome da Empresa</label>
+            <input type="text" id="create-empresa-nome" placeholder="Ex: Minha Empresa Ltda">
+        </div>
+        
+        <div class="modal-form-group">
+            <label>Descrição (opcional)</label>
+            <textarea id="create-empresa-desc" placeholder="Breve descrição da empresa..."></textarea>
+        </div>
+        
+        <div class="modal-footer-btns">
+            <button class="btn-voltar" onclick="backToOptionsFromCreate()">Voltar</button>
+            <button class="btn-acao" onclick="submitCreateCompany()">Criar Empresa</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ENTRAR EM EMPRESA -->
+<div id="join-company-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 8px;">Entrar em uma Empresa</h2>
+        <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">Digite o código de convite que você recebeu</p>
+
+        <div class="modal-form-group">
+            <label>Código de Convite</label>
+            <input type="text" id="join-empresa-codigo" placeholder="EX: ABC123XYZ">
+        </div>
+
+        <div class="modal-form-group">
+            <label>Mensagem (opcional)</label>
+            <textarea id="join-empresa-msg" placeholder="Por que você gostaria de participar desta empresa?"></textarea>
+        </div>
+
+        <div class="modal-info-box">
+            Você receberá acesso à empresa após o administrador aprovar sua solicitação
+        </div>
+
+        <div class="modal-footer-btns">
+            <button class="btn-voltar" onclick="backToOptionsFromJoin()">Voltar</button>
+            <button class="btn-acao" onclick="submitJoinCompany()">Solicitar Entrada</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

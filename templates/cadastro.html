@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Cadastro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<main class="page cadastro-page">
+
+    <header class="logo cadastro-logo">
+        <h1>DocuIA</h1>
+        <p>Documentação Inteligente com IA</p>
+    </header>
+
+    <section class="card cadastro-card">
+        <h2>Criar sua conta</h2>
+        <p class="subtitle">Preencha os dados para começar</p>
+
+        <form id="cadastro-form">
+            <div class="form-group">
+                <label>Nome completo</label>
+                <div class="input-box">
+                    <span class="icon">♙</span>
+                    <input type="text" id="nome" placeholder="Seu nome" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>E-mail</label>
+                <div class="input-box">
+                    <span class="icon">✉</span>
+                    <input type="email" id="email" placeholder="seu@email.com" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Senha</label>
+                <div class="input-box">
+                    <span class="icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                    </span>
+                    <input type="password" id="senha" placeholder="Sua senha" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Confirmar senha</label>
+                <div class="input-box">
+                    <span class="icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                    </span>
+                    <input type="password" id="confirmar-senha" placeholder="Repita sua senha" required>
+                </div>
+            </div>
+
+            <label class="terms">
+                <input type="checkbox">
+                <span>
+                    Concordo com os <a href="#">Termos de Uso</a> e
+                    <a href="#">Política de Privacidade</a>
+                </span>
+            </label>
+
+            <button type="submit">
+                <span>♙+</span>
+                Criar conta
+            </button>
+        </form>
+
+        <p class="bottom-text">
+            Já tem uma conta? <a href="/login">Fazer login</a>
+        </p>
+    </section>
+
+    <footer>© 2026 DocuIA. Todos os direitos reservados.</footer>
+
+</main>
+
+<script src="/api-config.js"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script>
+document.getElementById('cadastro-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+    const confirmarSenha = document.getElementById('confirmar-senha').value;
+    
+    if (senha !== confirmarSenha) {
+        alert("As senhas não coincidem!");
+        return;
+    }
+    
+    const btn = e.target.querySelector('button');
+    const originalText = btn.innerHTML;
+    
+    try {
+        btn.innerHTML = "Criando conta...";
+        btn.disabled = true;
+        
+        const response = await fetch(API_URLS.auth + "/auth/cadastro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nome, email, senha })
+        });
+        
+        const data = await handleResponse(response);
+        alert(data.mensagem);
+        
+        // Redireciona pro login
+        window.location.href = "/login";
+        
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>

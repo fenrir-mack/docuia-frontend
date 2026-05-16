@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Projetos</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <script src="/api-config.js"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+</head>
+
+<body class="dashboard-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+    <div class="sidebar-logo">
+        <h2>DocuIA</h2>
+        <p>Documentação Inteligente</p>
+    </div>
+
+    <nav class="menu">
+
+        <a href="/dashboard">
+            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+        </a>
+
+        <a href="/empresas">
+            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Empresas</span>
+        </a>
+
+        <a class="active" href="/projetos">
+            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Projetos</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+
+
+        <div class="user-dropdown-area">
+
+            <div class="user-menu" id="userMenu">
+
+                <a href="/perfil">
+                    ♙ Meu Perfil
+                </a>
+
+
+                <div class="menu-divider"></div>
+
+                <a href="/login" class="logout-link">
+                    ↪ Sair
+                </a>
+
+            </div>
+
+            <button class="user-box user-toggle" onclick="toggleUserMenu()">
+
+                <div class="profile-mini-avatar">
+                    U
+                </div>
+
+                <div class="user-info">
+                    <strong>Usuário</strong>
+                    <p>asd@a</p>
+                </div>
+
+                <span class="dropdown-arrow">⌄</span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="dashboard-main">
+
+    <section class="project-internal-content" style="padding: 24px;">
+
+        <div class="project-header-section">
+            <a href="/projetos" class="back-to-projects">
+                ← Voltar para Projetos
+            </a>
+            <div class="project-title-area">
+                <div class="project-icon-large">
+                    <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Folder" style="width:28px; height:28px; filter: brightness(0) invert(1);">
+                </div>
+                <div class="project-info-large">
+                    <h1 id="project-name">Carregando...</h1>
+                    <p id="project-description">Carregando descrição do projeto...</p>
+                    <p id="project-enterprise" style="margin-top: 4px; font-size: 13px;">Empresa: Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-tabs" id="project-tabs">
+            <a href="#" class="tab" id="tab-visao-geral">Visão Geral</a>
+            <a href="#" class="tab" id="tab-membros">Membros</a>
+            <a href="#" class="tab" id="tab-solicitacoes">Solicitações <span class="tab-badge" id="tab-badge-sol">0</span></a>
+            <a href="#" class="tab active" id="tab-configuracoes">Configurações</a>
+        </div>
+
+        <div class="config-section">
+            <h3>Informações Básicas</h3>
+
+            <div class="form-group-config">
+                <label>Nome do Projeto</label>
+                <input type="text" value="Sistema E-commerce">
+            </div>
+
+            <div class="form-group-config">
+                <label>Descrição</label>
+                <textarea>Plataforma completa de vendas online com integração de pagamentos</textarea>
+            </div>
+
+            <div class="form-group-config">
+                <label>Status</label>
+                <select>
+                    <option selected>Ativo</option>
+                    <option>Arquivado</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" style="margin-top: 24px;" id="btn-salvar">Salvar Alterações</button>
+        </div>
+
+        <div class="config-section">
+            <h3>Papéis e Permissões (RBAC)</h3>
+            <p class="sub">Defina os níveis de acesso e permissões para cada papel no projeto</p>
+
+            <div class="rbac-role">
+                <div>
+                    <h4>♔ Owner</h4>
+                    <p>Controle total do projeto</p>
+                    <div class="permission-tags">
+                        <span class="perm-tag">Ler</span>
+                        <span class="perm-tag">Escrever</span>
+                        <span class="perm-tag">Administrar</span>
+                        <span class="perm-tag">Deletar</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rbac-role">
+                <div>
+                    <h4>⬡ Editor</h4>
+                    <p>Pode criar e editar conteúdo</p>
+                    <div class="permission-tags">
+                        <span class="perm-tag">Ler</span>
+                        <span class="perm-tag">Escrever</span>
+                    </div>
+            </div>
+
+            <div class="rbac-role">
+                <div>
+                    <h4>♙ Viewer</h4>
+                    <p>Apenas visualização</p>
+                    <div class="permission-tags">
+                        <span class="perm-tag">Ler</span>
+                    </div>
+            </div>
+        </div>
+
+        <div class="danger-zone">
+            <h3>Zona de Perigo</h3>
+
+            <div class="danger-item-flex" style="margin-bottom: 0;">
+                <div>
+                    <h4>Excluir Projeto</h4>
+                    <p>Oculta este projeto e todos os seus dados. Ele poderá ser restaurado caso solicitado posteriormente.</p>
+                </div>
+                <button class="btn-danger-outline" style="background: #dc2626; color: white;" id="btn-excluir">Excluir Projeto</button>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<div class="help-btn">
+    ?
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const projectId = urlParams.get('id');
+
+if (!projectId) {
+    alert("Projeto não especificado!");
+    window.location.href = "/projetos";
+}
+
+async function loadConfigPage() {
+    try {
+        document.getElementById('tab-visao-geral').href = `/projeto?id=${projectId}`;
+        document.getElementById('tab-membros').href = `/projeto/membros?id=${projectId}`;
+        document.getElementById('tab-solicitacoes').href = `/projeto/solicitacoes?id=${projectId}`;
+        document.getElementById('tab-configuracoes').href = `/projeto/configuracoes?id=${projectId}`;
+
+        const projResp = await fetch(API_URLS.projetos + "/projetos/" + projectId, { headers: authHeaders() });
+        const project = await handleResponse(projResp);
+        document.getElementById('project-name').innerText = project.nome;
+        document.getElementById('project-description').innerText = project.descricao || "";
+        document.querySelector('input[type="text"]').value = project.nome;
+        document.querySelector('textarea').value = project.descricao || "";
+
+        const compResp = await fetch(API_URLS.empresas + "/empresas/" + project.empresa_id, { headers: authHeaders() });
+        const company = await handleResponse(compResp);
+        document.getElementById('project-enterprise').innerText = "Empresa: " + company.nome;
+
+        const solResp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/solicitacoes", { headers: authHeaders() });
+        const solicitacoes = await handleResponse(solResp);
+        const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
+        if (pendentes > 0) { document.getElementById('tab-badge-sol').innerText = pendentes; document.getElementById('tab-badge-sol').style.display = 'flex'; }
+
+    } catch (error) {
+        console.error("Erro ao carregar configurações do projeto:", error);
+    }
+}
+
+document.getElementById('btn-salvar').addEventListener('click', async () => {
+    const nome = document.querySelector('input[type="text"]').value;
+    const descricao = document.querySelector('textarea').value;
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId, {
+            method: "PUT",
+            headers: authHeaders(),
+            body: JSON.stringify({ nome, descricao })
+        });
+        await handleResponse(resp);
+        alert("Projeto atualizado com sucesso!");
+        window.location.reload();
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+document.getElementById('btn-excluir').addEventListener('click', async () => {
+    if (!confirm("Tem certeza que deseja excluir (ocultar) este projeto?")) return;
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/arquivar", {
+            method: "PUT",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        alert("Projeto excluído e ocultado com sucesso.");
+        window.location.href = "/projetos";
+    } catch (error) {
+        alert(error.message);
+    }
+});
+function toggleUserMenu() {
+    const menu = document.getElementById("userMenu");
+    menu.classList.toggle("show");
+}
+
+window.addEventListener("click", function(e) {
+    const menu = document.getElementById("userMenu");
+    const button = document.querySelector(".user-toggle");
+    if (menu && !menu.contains(e.target) && button && !button.contains(e.target)) {
+        menu.classList.remove("show");
+    }
+});
+
+document.addEventListener('DOMContentLoaded', loadConfigPage);
+</script>
+
+</body>
+</html>

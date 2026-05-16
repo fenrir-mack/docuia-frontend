@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Perfil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <script src="/api-config.js"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+</head>
+<body class="dashboard-body">
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <h2>DocuIA</h2>
+        <p>Documentação Inteligente</p>
+    </div>
+
+    <nav class="menu">
+        <a href="/dashboard">
+            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+        </a>
+        <a href="/empresas">
+            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Empresas</span>
+        </a>
+        <a href="/projetos">
+            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+
+
+
+    <div class="user-dropdown-area">
+
+        <div class="user-menu" id="userMenu">
+            <a href="/perfil">♙ Meu Perfil</a>
+
+
+            <div class="menu-divider"></div>
+
+            <a href="/login" class="logout-link">↪ Sair</a>
+        </div>
+
+        <button class="user-box user-toggle" onclick="toggleUserMenu()">
+            <div class="profile-mini-avatar">U</div>
+
+            <div class="user-info">
+                <strong id="sidebar-user-name">Usuário</strong>
+                <p id="sidebar-user-email">email@exemplo.com</p>
+            </div>
+
+            <span class="dropdown-arrow">⌄</span>
+        </button>
+
+    </div>
+
+</div>
+</aside>
+
+<main class="dashboard-main profile-main">
+
+    <section class="profile-content">
+
+        <header class="profile-header">
+            <h1>Meu Perfil</h1>
+            <p>Gerencie suas informações pessoais e configurações</p>
+        </header>
+
+        <section class="profile-card">
+            <div class="profile-card-title">
+                <h2>Informações Pessoais</h2>
+            </div>
+
+            <div class="profile-user">
+                <div class="profile-avatar">U</div>
+
+                <div>
+                    <h3 id="profile-display-name">Usuário</h3>
+                    <p id="profile-display-role">Cargo</p>
+                </div>
+            </div>
+
+            <form id="profile-form">
+                <div class="profile-grid">
+                    <div class="profile-field">
+                        <label>Nome completo</label>
+                        <div class="profile-input">♙ <input type="text" id="edit-nome" value="Usuário"></div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>E-mail</label>
+                        <div class="profile-input">✉ <input type="email" id="edit-email" value="email@exemplo.com" disabled></div>
+                    </div>
+
+
+
+                    <div class="profile-field">
+                        <label>Cargo/Função</label>
+                        <div class="profile-input"><input type="text" id="edit-cargo" value="Cargo"></div>
+                    </div>
+                </div>
+
+
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="submit" class="btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="profile-card password-card">
+            <h2>Alterar Senha</h2>
+
+            <form id="password-form">
+                <div class="profile-field">
+                    <label>Senha atual</label>
+                    <div class="profile-input">🔒 <input type="password" id="current-password" required></div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Nova senha</label>
+                    <div class="profile-input">🔒 <input type="password" id="new-password" required></div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Confirmar nova senha</label>
+                    <div class="profile-input">🔒 <input type="password" id="confirm-new-password" required></div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="submit" class="btn-primary">Alterar Senha</button>
+                </div>
+            </form>
+        </section>
+
+    </section>
+
+</main>
+
+<div class="help-btn">?</div>
+
+<script>
+async function loadProfile() {
+    try {
+        const response = await fetch(API_URLS.auth + "/perfil/me", {
+            headers: authHeaders()
+        });
+        const user = await handleResponse(response);
+
+        // Sidebar
+        document.getElementById('sidebar-user-name').innerText = user.nome;
+        document.getElementById('sidebar-user-email').innerText = user.email;
+
+        // Display
+        document.getElementById('profile-display-name').innerText = user.nome;
+        document.getElementById('profile-display-role').innerText = user.cargo || "Não informado";
+
+        // Form fields
+        document.getElementById('edit-nome').value = user.nome;
+        document.getElementById('edit-email').value = user.email;
+        document.getElementById('edit-cargo').value = user.cargo || "";
+
+
+
+    } catch (error) {
+        console.error("Erro ao carregar perfil:", error);
+    }
+}
+
+// Salvar Perfil
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const originalText = btn.innerText;
+
+    try {
+        btn.innerText = "Salvando...";
+        btn.disabled = true;
+
+        const response = await fetch(API_URLS.auth + "/perfil/me", {
+            method: "PUT",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                nome: document.getElementById('edit-nome').value,
+                cargo: document.getElementById('edit-cargo').value,
+                bio: "" // Campo removido da UI, enviamos vazio para a API não reclamar
+            })
+        });
+
+        const data = await handleResponse(response);
+        alert("Perfil atualizado com sucesso!");
+        loadProfile(); // Recarrega os dados
+
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+});
+
+// Alterar Senha
+document.getElementById('password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmNew = document.getElementById('confirm-new-password').value;
+
+    if (newPassword !== confirmNew) {
+        alert("As novas senhas não coincidem!");
+        return;
+    }
+
+    const btn = e.target.querySelector('button');
+    const originalText = btn.innerText;
+
+    try {
+        btn.innerText = "Alterando...";
+        btn.disabled = true;
+
+        const response = await fetch(API_URLS.auth + "/perfil/me/senha", {
+            method: "PUT",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                senha_atual: currentPassword,
+                nova_senha: newPassword
+            })
+        });
+
+        await handleResponse(response);
+        alert("Senha alterada com sucesso!");
+        e.target.reset();
+
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Empresas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <script src="/api-config.js"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+</head>
+
+<body class="dashboard-body">
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <h2>DocuIA</h2>
+        <p>Documentação Inteligente</p>
+    </div>
+
+    <nav class="menu">
+        <a href="/dashboard">
+            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+        </a>
+        <a class="active" href="/empresas">
+            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
+        </a>
+        <a href="/projetos">
+            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+
+
+        <div class="user-dropdown-area">
+            <div class="user-menu" id="userMenu">
+                <a href="/perfil">♙ Meu Perfil</a>
+
+
+                <div class="menu-divider"></div>
+
+                <a href="/login" class="logout-link">↪ Sair</a>
+            </div>
+
+            <button class="user-box user-toggle" onclick="toggleUserMenu()">
+                <div class="profile-mini-avatar">U</div>
+
+                <div class="user-info">
+                    <strong id="sidebar-user-name">Usuário</strong>
+                    <p id="sidebar-user-email">email@exemplo.com</p>
+                </div>
+
+                <span class="dropdown-arrow">⌄</span>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<main class="dashboard-main">
+
+    <section class="project-internal-content" style="padding: 24px;">
+
+        <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 24px; text-decoration: none;">
+            <span style="margin-right: 8px; font-size: 18px;">←</span> Sair da Empresa
+        </a>
+
+        <div class="project-header-section">
+            <div class="project-title-area">
+                <div class="project-icon-large" style="background: #8b5cf6;">
+                    <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresa" style="width:28px; height:28px; filter: brightness(0) invert(1);">
+                </div>
+                <div class="project-info-large">
+                    <h1 id="company-name">Carregando...</h1>
+                    <p id="company-description">Carregando descrição da empresa...</p>
+                </div>
+            </div>
+        </div>
+
+                <div class="company-stats-grid">
+            <div class="company-stat-card">
+                <span><img src="/static/pngs/folder.png" alt="Projetos" style="width:14px; height:14px;"> Projetos</span>
+                <strong id="stats-projects">0</strong>
+            </div>
+            <div class="company-stat-card">
+                <span><img src="/static/pngs/users.png" alt="Membros" style="width:14px; height:14px;"> Membros</span>
+                <strong id="stats-members">0</strong>
+            </div>
+            <div class="company-stat-card">
+                <span><img src="/static/pngs/file.png" alt="Documentos" style="width:14px; height:14px;"> Documentos</span>
+                <strong style="font-size: 14px; font-weight: normal; color: #6b7280; padding-top: 4px;">Em breve</strong>
+            </div>
+        </div>
+
+        <div class="project-tabs" id="company-tabs">
+            <a href="#" class="tab active" id="tab-projetos">Projetos</a>
+            <a href="#" class="tab" id="tab-membros">Membros</a>
+            <a href="#" class="tab" id="tab-solicitacoes">Solicitações <span class="tab-badge" id="tab-badge-sol">0</span></a>
+            <a href="#" class="tab" id="tab-configuracoes">Configurações</a>
+        </div>
+
+        <div class="members-header">
+            <h2>Projetos da Empresa</h2>
+            <button class="btn-primary btn-sm" id="btn-novo-projeto">
+                + Novo Projeto
+            </button>
+        </div>
+
+        <div class="company-projects-list" id="projects-list">
+            <!-- Projetos serão carregados aqui via JS -->
+            <p style="padding: 20px; color: #666;">Carregando projetos...</p>
+        </div>
+
+    </section>
+
+</main>
+
+<div class="help-btn">?</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const companyId = urlParams.get('id');
+
+if (!companyId) {
+    alert("Empresa não especificada!");
+    window.location.href = "/empresas";
+}
+
+async function loadCompanyDetails() {
+    try {
+        // Injeta hrefs das tabs com o ?id= correto
+        document.getElementById('tab-projetos').href = `/empresa?id=${companyId}`;
+        document.getElementById('tab-membros').href = `/empresa/membros?id=${companyId}`;
+        document.getElementById('tab-solicitacoes').href = `/empresa/solicitacoes?id=${companyId}`;
+        document.getElementById('tab-configuracoes').href = `/empresa/configuracoes?id=${companyId}`;
+
+        // 1. Perfil do Usuário
+        const userResp = await fetch(API_URLS.auth + "/perfil/me", { headers: authHeaders() });
+        const user = await handleResponse(userResp);
+        document.getElementById('sidebar-user-name').innerText = user.nome;
+        document.getElementById('sidebar-user-email').innerText = user.email;
+
+        // 2. Detalhes da Empresa (MS2)
+        const compResp = await fetch(API_URLS.empresas + "/empresas/" + companyId, {
+            headers: authHeaders()
+        });
+        const company = await handleResponse(compResp);
+        document.getElementById('company-name').innerText = company.nome;
+        document.getElementById('company-description').innerText = company.descricao || "Sem descrição disponível";
+
+        // 3. Membros da Empresa (MS2)
+        const membersResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/membros", {
+            headers: authHeaders()
+        });
+        const members = await handleResponse(membersResp);
+        document.getElementById('stats-members').innerText = members.length;
+                
+        // 4. Projetos onde o usuário é membro
+        const projResp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        const myProjects = await handleResponse(projResp);
+        const myProjectIds = myProjects.map(p => p.id);
+
+        // 5. Todos os Projetos da Empresa
+        const allProjResp = await fetch(API_URLS.projetos + "/projetos/empresa/" + companyId, { headers: authHeaders() });
+        const companyProjects = await handleResponse(allProjResp);
+        const activeProjects = companyProjects.filter(p => p.status !== 'arquivado');
+        
+        activeProjects.forEach(p => {
+            p.is_member = myProjectIds.includes(p.id);
+        });
+
+        renderProjects(activeProjects);
+        document.getElementById('stats-projects').innerText = activeProjects.length;
+
+        // 5. Solicitações pendentes (badge na tab)
+        const solResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/solicitacoes", {
+            headers: authHeaders()
+        });
+        const solicitacoes = await handleResponse(solResp);
+        const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
+        if (pendentes > 0) { document.getElementById('tab-badge-sol').innerText = pendentes; document.getElementById('tab-badge-sol').style.display = 'flex'; }
+
+    } catch (error) {
+        console.error("Erro ao carregar detalhes:", error);
+    }
+}
+
+function renderProjects(projects) {
+    const list = document.getElementById('projects-list');
+    if (projects.length === 0) {
+        list.innerHTML = '<p style="padding: 20px; color: #666;">Nenhum projeto cadastrado nesta empresa.</p>';
+        return;
+    }
+
+    list.innerHTML = projects.map(p => `
+        <div class="company-project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
+            <h4>${p.nome}</h4>
+            <p>
+                <span style="display: flex; align-items: center; gap: 4px;"><img src="/static/pngs/users.png" style="width:14px; height:14px; filter: grayscale(100%) opacity(0.6);"> ?</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><img src="/static/pngs/file.png" style="width:14px; height:14px; filter: grayscale(100%) opacity(0.6);"> ? docs</span>
+            </p>
+        </div>
+    `).join('');
+}
+
+// Criar Novo Projeto via Modal
+document.getElementById('btn-novo-projeto').addEventListener('click', () => {
+    document.getElementById('create-project-modal').classList.add('show');
+});
+
+function closeProjectModal() {
+    document.getElementById('create-project-modal').classList.remove('show');
+}
+
+async function submitCreateProject() {
+    const nome = document.getElementById('create-projeto-nome').value.trim();
+    const descricao = document.getElementById('create-projeto-desc').value.trim();
+    if (!nome) return alert("O nome do projeto é obrigatório.");
+
+    const btn = document.querySelector('#create-project-modal .btn-acao');
+    try {
+        btn.innerText = "Criando...";
+        btn.disabled = true;
+
+        const resp = await fetch(API_URLS.projetos + "/projetos", {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                nome: nome,
+                descricao: descricao,
+                empresa_id: parseInt(companyId)
+            })
+        });
+        await handleResponse(resp);
+        
+        closeProjectModal();
+        document.getElementById('create-projeto-nome').value = '';
+        document.getElementById('create-projeto-desc').value = '';
+        
+        alert("Projeto criado com sucesso!");
+        loadCompanyDetails();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = "Criar Projeto";
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadCompanyDetails);
+
+function toggleUserMenu() {
+    const menu = document.getElementById("userMenu");
+    menu.classList.toggle("show");
+}
+</script>
+
+</body>
+
+<!-- MODAL CRIAR PROJETO -->
+<div id="create-project-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 8px;">Novo Projeto</h2>
+        <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">Crie um novo projeto nesta empresa.</p>
+
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Nome do Projeto</label>
+            <input type="text" id="create-projeto-nome" placeholder="Ex: App Mobile" style="width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Descrição</label>
+            <textarea id="create-projeto-desc" placeholder="Uma breve descrição sobre este projeto..." style="width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; resize: vertical; min-height: 80px; box-sizing: border-box;"></textarea>
+        </div>
+
+        <div class="modal-footer-btns">
+            <button class="btn-cancel" onclick="closeProjectModal()">Cancelar</button>
+            <button class="btn-acao" onclick="submitCreateProject()">Criar Projeto</button>
+        </div>
+    </div>
+</div>
+
+</html>

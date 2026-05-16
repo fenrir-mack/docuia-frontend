@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Projetos</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <script src="/api-config.js"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+</head>
+
+<body class="dashboard-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+    <div class="sidebar-logo">
+        <h2>DocuIA</h2>
+        <p>Documentação Inteligente</p>
+    </div>
+
+    <nav class="menu">
+
+        <a href="/dashboard">
+            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+        </a>
+
+        <a href="/empresas">
+            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Empresas</span>
+        </a>
+
+        <a class="active" href="/projetos">
+            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Projetos</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+
+
+        <div class="user-dropdown-area">
+
+            <div class="user-menu" id="userMenu">
+
+                <a href="/perfil">
+                    ♙ Meu Perfil
+                </a>
+
+
+                <div class="menu-divider"></div>
+
+                <a href="/login" class="logout-link">
+                    ↪ Sair
+                </a>
+
+            </div>
+
+            <button class="user-box user-toggle" onclick="toggleUserMenu()">
+
+                <div class="profile-mini-avatar">
+                    U
+                </div>
+
+                <div class="user-info">
+                    <strong id="sidebar-user-name">Usuário</strong>
+                    <p id="sidebar-user-email">email@exemplo.com</p>
+                </div>
+
+                <span class="dropdown-arrow">⌄</span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="dashboard-main">
+
+    <section class="project-internal-content" style="padding: 24px;">
+
+        <div class="project-header-section">
+            <a href="/projetos" class="back-to-projects">
+                ← Voltar para Projetos
+            </a>
+            <div class="project-title-area">
+                <div class="project-icon-large">
+                    <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Folder" style="width:28px; height:28px; filter: brightness(0) invert(1);">
+                </div>
+                <div class="project-info-large">
+                    <h1 id="project-name">Carregando...</h1>
+                    <p id="project-description">Carregando descrição do projeto...</p>
+                    <p id="project-enterprise" style="margin-top: 4px; font-size: 13px;">Empresa: Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-tabs" id="project-tabs">
+            <a href="#" class="tab active" id="tab-visao-geral">Visão Geral</a>
+            <a href="#" class="tab" id="tab-membros">Membros</a>
+            <a href="#" class="tab" id="tab-solicitacoes">Solicitações <span class="tab-badge" id="tab-badge-sol">0</span></a>
+            <a href="#" class="tab" id="tab-configuracoes">Configurações</a>
+        </div>
+
+        <div class="project-grid">
+            <div class="module-card">
+                <div class="module-icon green">
+                    <img src="{{ url_for('static', filename='pngs/file.png') }}" alt="Upload">
+                </div>
+                <h3>Upload de Dados</h3>
+                <p>15 arquivos</p>
+            </div>
+            <div class="module-card">
+                <div class="module-icon purple">
+                    <img src="{{ url_for('static', filename='pngs/file.png') }}" alt="Relatórios">
+                </div>
+                <h3>Relatórios</h3>
+                <p>8 relatórios</p>
+            </div>
+            <div class="module-card">
+                <div class="module-icon blue">
+                    <img src="{{ url_for('static', filename='pngs/presentation.png') }}" alt="Apresentações">
+                </div>
+                <h3>Apresentações</h3>
+                <p>5 apresentações</p>
+            </div>
+            <div class="module-card">
+                <div class="module-icon orange">
+                    <img src="{{ url_for('static', filename='pngs/diagram.png') }}" alt="Diagramas">
+                </div>
+                <h3>Diagramas</h3>
+                <p>12 diagramas</p>
+            </div>
+            <div class="module-card">
+                <div class="module-icon teal">
+                    <img src="{{ url_for('static', filename='pngs/users.png') }}" alt="Consulta IA">
+                </div>
+                <h3>Consulta IA</h3>
+                <p>Disponível</p>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<div class="help-btn">
+    ?
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const projectId = urlParams.get('id');
+
+if (!projectId) {
+    alert("Projeto não especificado!");
+    window.location.href = "/projetos";
+}
+
+async function loadProjectDetails() {
+    try {
+        // Injeta hrefs das tabs com o ?id= correto
+        document.getElementById('tab-visao-geral').href = `/projeto?id=${projectId}`;
+        document.getElementById('tab-membros').href = `/projeto/membros?id=${projectId}`;
+        document.getElementById('tab-solicitacoes').href = `/projeto/solicitacoes?id=${projectId}`;
+        document.getElementById('tab-configuracoes').href = `/projeto/configuracoes?id=${projectId}`;
+
+        // 1. Perfil do Usuário
+        const userResp = await fetch(API_URLS.auth + "/perfil/me", { headers: authHeaders() });
+        const user = await handleResponse(userResp);
+        document.getElementById('sidebar-user-name').innerText = user.nome;
+        document.getElementById('sidebar-user-email').innerText = user.email;
+
+        // 2. Detalhes do Projeto (MS3)
+        const projResp = await fetch(API_URLS.projetos + "/projetos/" + projectId, {
+            headers: authHeaders()
+        });
+        const project = await handleResponse(projResp);
+        
+        document.getElementById('project-name').innerText = project.nome + (project.status === 'arquivado' ? ' (Arquivado)' : '');
+        document.getElementById('project-description').innerText = project.descricao || "Sem descrição disponível";
+        
+        // 3. Detalhes da Empresa (MS2) para mostrar o nome no cabeçalho
+        const compResp = await fetch(API_URLS.empresas + "/empresas/" + project.empresa_id, {
+            headers: authHeaders()
+        });
+        const company = await handleResponse(compResp);
+        document.getElementById('project-enterprise').innerText = "Empresa: " + company.nome;
+
+    } catch (error) {
+        console.error("Erro ao carregar detalhes do projeto:", error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadProjectDetails);
+
+function toggleUserMenu() {
+    const menu = document.getElementById("userMenu");
+    menu.classList.toggle("show");
+}
+</script>
+
+</body>
+</html>

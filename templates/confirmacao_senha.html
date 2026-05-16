@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - E-mail Enviado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<main class="page forgot-page">
+
+    <header class="logo forgot-logo">
+        <h1>DocuIA</h1>
+        <p>Documentação Inteligente com IA</p>
+    </header>
+
+    <section class="card forgot-card confirm-card">
+
+        <div class="confirm-icon">📬</div>
+
+        <h2>E-mail enviado!</h2>
+
+        <p class="subtitle forgot-subtitle">
+            Se o endereço informado estiver cadastrado, você receberá
+            as instruções para redefinir sua senha em breve.
+            Verifique também sua caixa de spam.
+        </p>
+
+        <a href="/login" class="forgot-button confirm-btn">
+            Voltar para o login
+        </a>
+
+        <p class="confirm-resend">
+            Não recebeu? <a href="/esqueceu-senha">Tentar novamente</a>
+        </p>
+
+    </section>
+
+    <footer>
+        © 2026 DocuIA. Todos os direitos reservados.
+    </footer>
+
+</main>
+
+</body>
+</html>

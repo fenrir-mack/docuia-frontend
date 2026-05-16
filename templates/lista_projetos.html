@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>DocuIA - Projetos</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <script src="/api-config.js"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+</head>
+
+<body class="dashboard-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+    <div class="sidebar-logo">
+        <h2>DocuIA</h2>
+        <p>Documentação Inteligente</p>
+    </div>
+
+    <nav class="menu">
+
+        <a href="/dashboard">
+            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+        </a>
+
+        <a href="/empresas">
+            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Empresas</span>
+        </a>
+
+        <a class="active" href="/projetos">
+            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Projetos</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+
+
+        <div class="user-dropdown-area">
+
+            <div class="user-menu" id="userMenu">
+
+                <a href="/perfil">
+                    ♙ Meu Perfil
+                </a>
+
+
+                <div class="menu-divider"></div>
+
+                <a href="/login" class="logout-link">
+                    ↪ Sair
+                </a>
+
+            </div>
+
+            <button class="user-box user-toggle" onclick="toggleUserMenu()">
+
+                <div class="profile-mini-avatar">
+                    U
+                </div>
+
+                <div class="user-info">
+                    <strong id="sidebar-user-name">Usuário</strong>
+                    <p id="sidebar-user-email">email@exemplo.com</p>
+                </div>
+
+                <span class="dropdown-arrow">⌄</span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="dashboard-main">
+
+    <section class="projects-content">
+
+        <!-- HEADER -->
+        <header class="projects-header">
+
+            <div>
+
+                <h1>Meus Projetos</h1>
+
+                <p id="header-subtitle">
+                    ▤ Geral
+                </p>
+
+            </div>
+
+            <button class="new-project-btn" id="btn-novo-projeto">
+                + Novo Projeto
+            </button>
+
+        </header>
+
+        <!-- SEARCH -->
+        <div class="projects-search">
+
+            <span>⌕</span>
+
+            <input
+                type="text"
+                placeholder="Buscar projetos pelo nome..."
+            >
+
+        </div>
+
+        <!-- FILTERS -->
+        <div class="projects-filters">
+
+            <button class="filter-btn active-filter">
+                Todos
+            </button>
+
+            <button class="filter-btn">
+                Ativos
+            </button>
+
+            <button class="filter-btn">
+                Arquivados
+            </button>
+
+            <div class="filter-divider"></div>
+
+            <select class="category-select">
+                <option>Todas Categorias</option>
+            </select>
+
+        </div>
+
+        <!-- GRID -->
+        <section class="projects-grid" id="projects-grid">
+            <!-- Projetos serão carregados aqui via JS -->
+            <p style="padding: 40px; grid-column: 1/-1; text-align: center; color: #666;">Carregando projetos...</p>
+        </section>
+
+    </section>
+
+</main>
+
+<div class="help-btn">
+    ?
+</div>
+
+<script>
+async function loadProjects() {
+    try {
+        // 1. Perfil do Usuário
+        const userResp = await fetch(API_URLS.auth + "/perfil/me", { headers: authHeaders() });
+        const user = await handleResponse(userResp);
+        document.getElementById('sidebar-user-name').innerText = user.nome;
+        document.getElementById('sidebar-user-email').innerText = user.email;
+
+        // 2. Carregar Projetos
+        const resp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        const projects = await handleResponse(resp);
+        const activeProjects = projects.filter(p => p.status !== 'arquivado');
+        renderProjects(activeProjects);
+
+    } catch (error) {
+        console.error("Erro ao carregar projetos:", error);
+    }
+}
+
+function renderProjects(projects) {
+    const grid = document.getElementById('projects-grid');
+    if (projects.length === 0) {
+        grid.innerHTML = '<p style="padding: 40px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não possui projetos.</p>';
+        return;
+    }
+
+    grid.innerHTML = projects.map(p => `
+        <article class="project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
+            <div class="project-top">
+                <div class="project-main-info">
+                    <div class="project-icon">▣</div>
+                    <div>
+                        <div class="project-title-row">
+                            <h2>${p.nome}</h2>
+                        </div>
+                        <div class="project-tags">
+                            <span class="tag ${p.status === 'ativo' ? 'green-tag' : 'gray-tag'}">
+                                ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                            </span>
+                            <span class="tag purple-tag">
+                                ◇ ${p.categoria || 'Geral'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <span class="project-dots">⋮</span>
+            </div>
+            <p class="project-description">${p.descricao || 'Sem descrição'}</p>
+            <p class="project-link">${p.link_repo || 'Sem repositório vinculado'}</p>
+            <div class="project-footer">
+                <span><img src="/static/pngs/users.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> ?</span>
+                <span><img src="/static/pngs/file.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> ?</span>
+                <span>◫ ${new Date(p.criado_em).toLocaleDateString()}</span>
+            </div>
+        </article>
+    `).join('');
+}
+
+// Criar Novo Projeto
+document.getElementById('btn-novo-projeto').addEventListener('click', async () => {
+    // Para criar um projeto fora da página de uma empresa, precisamos saber qual empresa usar.
+    // Como simplificação, vamos perguntar o ID da empresa ou o nome.
+    // Em um sistema real, teríamos um select com as empresas do usuário.
+    const empresaId = prompt("Digite o ID da empresa para este projeto:");
+    if (!empresaId) return;
+
+    const nome = prompt("Digite o nome do novo projeto:");
+    if (!nome) return;
+
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos", {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                nome: nome,
+                descricao: "Projeto criado via lista geral",
+                empresa_id: parseInt(empresaId),
+                categoria: "Desenvolvimento"
+            })
+        });
+        await handleResponse(resp);
+        alert("Projeto criado com sucesso!");
+        loadProjects();
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', loadProjects);
+
+function toggleUserMenu() {
+    const menu = document.getElementById("userMenu");
+    menu.classList.toggle("show");
+}
+</script>
+
+</body>
+</html>
