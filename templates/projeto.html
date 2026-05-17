@@ -107,12 +107,12 @@
         </div>
 
         <div class="project-grid">
-            <div class="module-card">
+            <div class="module-card" id="card-upload" style="cursor: pointer;">
                 <div class="module-icon green">
                     <img src="{{ url_for('static', filename='pngs/file.png') }}" alt="Upload">
                 </div>
                 <h3>Upload de Dados</h3>
-                <p>15 arquivos</p>
+                <p>Enviar novos documentos</p>
             </div>
             <div class="module-card">
                 <div class="module-icon purple">
@@ -190,6 +190,14 @@ async function loadProjectDetails() {
         });
         const company = await handleResponse(compResp);
         document.getElementById('project-enterprise').innerText = "Empresa: " + company.nome;
+
+        // 4. Configurar eventos de clique para navegação dinâmica para o microsserviço de upload dos amigos
+        const token = getToken();
+        const amigosUrl = API_URLS.amigos || "http://localhost:5000";
+
+        document.getElementById('card-upload').addEventListener('click', () => {
+            window.location.href = `${amigosUrl}/projeto/upload?id=${projectId}&token=${token}&companyId=${project.empresa_id}`;
+        });
 
     } catch (error) {
         console.error("Erro ao carregar detalhes do projeto:", error);

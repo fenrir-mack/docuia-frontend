@@ -9,12 +9,14 @@ def api_config_js():
     auth_url = os.getenv("AUTH_API_URL", "http://localhost:8001")
     empresas_url = os.getenv("EMPRESAS_API_URL", "http://localhost:8002")
     projetos_url = os.getenv("PROJETOS_API_URL", "http://localhost:8003")
+    amigos_url = os.getenv("AMIGOS_FRONTEND_URL", "http://localhost:5000")
     
     js_content = f"""
     window.API_CONFIG = {{
         auth: "{auth_url}",
         empresas: "{empresas_url}",
-        projetos: "{projetos_url}"
+        projetos: "{projetos_url}",
+        amigos: "{amigos_url}"
     }};
     """
     return Response(js_content, mimetype="application/javascript")
