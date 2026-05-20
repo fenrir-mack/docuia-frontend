@@ -4,8 +4,12 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 app = FastAPI(title="Frontend - DocuIA")
+
+# Resolve o problema de HTTP/HTTPS no Azure (Mixed Content)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Monta a pasta estática para o CSS e Imagens funcionarem
 app.mount("/static", StaticFiles(directory="static"), name="static")
