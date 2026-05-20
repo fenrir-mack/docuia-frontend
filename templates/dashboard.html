@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocuIA - Dashboard</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=4">
     <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
     <script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
@@ -25,15 +25,15 @@
     <!-- MENU -->
     <nav class="menu">
         <a class="active" href="/dashboard">
-            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px;"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:14px; height:14px;"> <span>Dashboard</span>
         </a>
 
         <a href="/empresas">
-            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px;"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:14px; height:14px;"> <span>Empresas</span>
         </a>
 
         <a href="/projetos">
-            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px;"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:14px; height:14px;"> <span>Projetos</span>
         </a>
     </nav>
 
@@ -101,7 +101,7 @@
 
                 <div class="stat-top">
                     <div class="stat-icon blue">
-                        <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:19px; height:19px; ">
                     </div>
                 </div>
 
@@ -114,11 +114,11 @@
 
                 <div class="stat-top">
                     <div class="stat-icon green">
-                        <img src="{{ url_for('static', path='pngs/file.png') }}" alt="Documentos" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/file.png') }}" alt="Documentos" style="width:19px; height:19px; ">
                     </div>
                 </div>
 
-                <h2 style="font-size: 16px; color: #64748b; margin-top: 14px;">Em breve</h2>
+                <h2 style="font-size: 13px; color: #64748b; margin-top: 11px;">Em breve</h2>
                 <p>Documentos Gerados</p>
 
             </div>
@@ -127,11 +127,11 @@
 
                 <div class="stat-top">
                     <div class="stat-icon purple">
-                        <img src="{{ url_for('static', path='pngs/presentation.png') }}" alt="Apresentações" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/presentation.png') }}" alt="Apresentações" style="width:19px; height:19px; ">
                     </div>
                 </div>
 
-                <h2 style="font-size: 16px; color: #64748b; margin-top: 14px;">Em breve</h2>
+                <h2 style="font-size: 13px; color: #64748b; margin-top: 11px;">Em breve</h2>
                 <p>Apresentações</p>
 
             </div>
@@ -140,11 +140,11 @@
 
                 <div class="stat-top">
                     <div class="stat-icon orange">
-                        <img src="{{ url_for('static', path='pngs/diagram.png') }}" alt="Diagramas" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/diagram.png') }}" alt="Diagramas" style="width:19px; height:19px; ">
                     </div>
                 </div>
 
-                <h2 style="font-size: 16px; color: #64748b; margin-top: 14px;">Em breve</h2>
+                <h2 style="font-size: 13px; color: #64748b; margin-top: 11px;">Em breve</h2>
                 <p>Diagramas</p>
 
             </div>
@@ -158,7 +158,7 @@
             <div class="panel">
 
                 <div class="panel-title">
-                    <h2><img src="{{ url_for('static', path='pngs/clock.png') }}" alt="Recentes" style="width:20px; height:20px; vertical-align:text-bottom;"> Projetos Recentes</h2>
+                    <h2><img src="{{ url_for('static', path='pngs/clock.png') }}" alt="Recentes" style="width:16px; height:16px; vertical-align:text-bottom;"> Projetos Recentes</h2>
 
                     <a href="/projetos">
                         Ver todos ›
@@ -167,7 +167,7 @@
 
                 <div id="recent-projects-container">
                     <!-- Projetos serão inseridos aqui via JS -->
-                    <p style="padding: 20px; color: #666;">Carregando projetos...</p>
+                    <p style="padding: 16px; color: #666;">Carregando projetos...</p>
                 </div>
 
             </div>
@@ -177,7 +177,7 @@
 
                 <div class="panel-title">
 
-                    <h2><img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:20px; height:20px; vertical-align:text-bottom;"> Minhas Empresas</h2>
+                    <h2><img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:16px; height:16px; vertical-align:text-bottom;"> Minhas Empresas</h2>
 
                     <a href="/empresas">
                         Ver todas ›
@@ -187,7 +187,7 @@
 
                 <div id="my-companies-container">
                     <!-- Empresas serão inseridas aqui via JS -->
-                    <p style="padding: 20px; color: #666;">Carregando empresas...</p>
+                    <p style="padding: 16px; color: #666;">Carregando empresas...</p>
                 </div>
 
             </div>
@@ -294,9 +294,9 @@ function renderCompanies(companies) {
     const container = document.getElementById('my-companies-container');
     if (companies.length === 0) {
         container.innerHTML = `
-            <div style="padding: 30px 20px; text-align: center;">
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Você ainda não possui uma empresa.</p>
-                <a href="/empresas" class="outline-btn" style="display: inline-flex; justify-content: center; align-items: center; text-decoration: none; width: auto; padding: 0 20px; background: #eef2ff;">Criar ou Entrar em uma Empresa</a>
+            <div style="padding: 24px 16px; text-align: center;">
+                <p style="color: #64748b; font-size: 11px; margin-bottom: 13px;">Você ainda não possui uma empresa.</p>
+                <a href="/empresas" class="outline-btn" style="display: inline-flex; justify-content: center; align-items: center; text-decoration: none; width: auto; padding: 0 16px; background: #eef2ff;">Criar ou Entrar em uma Empresa</a>
             </div>
         `;
         return;
@@ -304,8 +304,8 @@ function renderCompanies(companies) {
 
     container.innerHTML = companies.map(c => `
         <a href="/empresa?id=${c.id}" class="list-item company-item" style="text-decoration: none; color: inherit;">
-            <div class="item-icon green">
-                <img src="/static/pngs/business-and-trade.png" alt="Empresa" style="width:20px; height:20px; filter: brightness(0) invert(1);">
+            <div class="item-icon ${c.cor || 'teal'}">
+                <img src="/static/pngs/business-and-trade.png" alt="Empresa" style="width:16px; height:16px; ">
             </div>
             <div class="item-text">
                 <strong>${c.nome}</strong>
@@ -322,9 +322,9 @@ function renderProjects(projects) {
     const container = document.getElementById('recent-projects-container');
     if (projects.length === 0) {
         container.innerHTML = `
-            <div style="padding: 30px 20px; text-align: center;">
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Você ainda não tem nenhum projeto ativo.</p>
-                <a href="/projetos" class="outline-btn" style="display: inline-flex; justify-content: center; align-items: center; text-decoration: none; width: auto; padding: 0 20px; background: #fdf4ff; color: #8b3ff4; border-color: #8b3ff4;">Criar meu primeiro Projeto</a>
+            <div style="padding: 24px 16px; text-align: center;">
+                <p style="color: #64748b; font-size: 11px; margin-bottom: 13px;">Você ainda não tem nenhum projeto ativo.</p>
+                <a href="/projetos" class="outline-btn" style="display: inline-flex; justify-content: center; align-items: center; text-decoration: none; width: auto; padding: 0 16px; background: #fdf4ff; color: #8b3ff4; border-color: #8b3ff4;">Criar meu primeiro Projeto</a>
             </div>
         `;
         return;
@@ -332,8 +332,8 @@ function renderProjects(projects) {
 
     container.innerHTML = projects.map(p => `
         <a href="/projeto?id=${p.id}" class="list-item" style="text-decoration: none; color: inherit;">
-            <div class="item-icon purple">
-                <img src="/static/pngs/folder.png" alt="Projeto" style="width:20px; height:20px; filter: brightness(0) invert(1);">
+            <div class="item-icon ${p.cor || 'indigo'}">
+                <img src="/static/pngs/folder.png" alt="Projeto" style="width:16px; height:16px; ">
             </div>
             <div class="item-text">
                 <strong>${p.nome} ${p.status === 'arquivado' ? '(Arquivado)' : ''}</strong>

@@ -19,13 +19,13 @@
 
     <nav class="menu">
         <a href="/dashboard">
-            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Dashboard</span>
         </a>
         <a class="active" href="/empresas">
-            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Empresas</span>
         </a>
         <a href="/projetos">
-            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Projetos</span>
         </a>
     </nav>
 
@@ -58,16 +58,16 @@
 
 <main class="dashboard-main">
 
-    <section class="project-internal-content" style="padding: 24px;">
+    <section class="project-internal-content" style="padding: 19px;">
 
-        <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 24px; text-decoration: none;">
-            <span style="margin-right: 8px; font-size: 18px;">←</span> Sair da Empresa
+        <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 19px; text-decoration: none;">
+            <span style="margin-right: 6px; font-size: 14px;">←</span> Sair da Empresa
         </a>
 
         <div class="project-header-section">
             <div class="project-title-area">
                 <div class="project-icon-large" style="background: #8b5cf6;">
-                    <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:28px; height:28px; filter: brightness(0) invert(1);">
+                    <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
                 <div class="project-info-large">
                     <h1 id="company-name">Carregando...</h1>
@@ -78,16 +78,16 @@
 
                 <div class="company-stats-grid">
             <div class="company-stat-card">
-                <span><img src="/static/pngs/folder.png" alt="Projetos" style="width:14px; height:14px;"> Projetos</span>
+                <span><img src="/static/pngs/folder.png" alt="Projetos" style="width:11px; height:11px;"> Projetos</span>
                 <strong id="stats-projects">0</strong>
             </div>
             <div class="company-stat-card">
-                <span><img src="/static/pngs/users.png" alt="Membros" style="width:14px; height:14px;"> Membros</span>
+                <span><img src="/static/pngs/users.png" alt="Membros" style="width:11px; height:11px;"> Membros</span>
                 <strong id="stats-members">0</strong>
             </div>
             <div class="company-stat-card">
-                <span><img src="/static/pngs/file.png" alt="Documentos" style="width:14px; height:14px;"> Documentos</span>
-                <strong style="font-size: 14px; font-weight: normal; color: #6b7280; padding-top: 4px;">Em breve</strong>
+                <span><img src="/static/pngs/file.png" alt="Documentos" style="width:11px; height:11px;"> Documentos</span>
+                <strong style="font-size: 11px; font-weight: normal; color: #6b7280; padding-top: 3px;">Em breve</strong>
             </div>
         </div>
 
@@ -107,7 +107,7 @@
 
         <div class="company-projects-list" id="projects-list">
             <!-- Projetos serão carregados aqui via JS -->
-            <p style="padding: 20px; color: #666;">Carregando projetos...</p>
+            <p style="padding: 16px; color: #666;">Carregando projetos...</p>
         </div>
 
     </section>
@@ -186,7 +186,7 @@ async function loadCompanyDetails() {
 function renderProjects(projects) {
     const list = document.getElementById('projects-list');
     if (projects.length === 0) {
-        list.innerHTML = '<p style="padding: 20px; color: #666;">Nenhum projeto cadastrado nesta empresa.</p>';
+        list.innerHTML = '<p style="padding: 16px; color: #666;">Nenhum projeto cadastrado nesta empresa.</p>';
         return;
     }
 
@@ -194,8 +194,8 @@ function renderProjects(projects) {
         <div class="company-project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
             <h4>${p.nome}</h4>
             <p>
-                <span style="display: flex; align-items: center; gap: 4px;"><img src="/static/pngs/users.png" style="width:14px; height:14px; filter: grayscale(100%) opacity(0.6);"> ?</span>
-                <span style="display: flex; align-items: center; gap: 4px;"><img src="/static/pngs/file.png" style="width:14px; height:14px; filter: grayscale(100%) opacity(0.6);"> ? docs</span>
+                <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/users.png" style="width:11px; height:11px; "> ?</span>
+                <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/file.png" style="width:11px; height:11px; "> ? docs</span>
             </p>
         </div>
     `).join('');
@@ -258,17 +258,17 @@ function toggleUserMenu() {
 <!-- MODAL CRIAR PROJETO -->
 <div id="create-project-modal" class="modal-overlay">
     <div class="modal-card">
-        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 8px;">Novo Projeto</h2>
-        <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">Crie um novo projeto nesta empresa.</p>
+        <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Novo Projeto</h2>
+        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Crie um novo projeto nesta empresa.</p>
 
-        <div style="margin-bottom: 16px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Nome do Projeto</label>
-            <input type="text" id="create-projeto-nome" placeholder="Ex: App Mobile" style="width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; box-sizing: border-box;">
+        <div style="margin-bottom: 13px;">
+            <label style="display: block; font-size: 11px; font-weight: 600; color: #1e293b; margin-bottom: 5px;">Nome do Projeto</label>
+            <input type="text" id="create-projeto-nome" placeholder="Ex: App Mobile" style="width: 100%; padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
         </div>
 
-        <div style="margin-bottom: 24px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Descrição</label>
-            <textarea id="create-projeto-desc" placeholder="Uma breve descrição sobre este projeto..." style="width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; resize: vertical; min-height: 80px; box-sizing: border-box;"></textarea>
+        <div style="margin-bottom: 19px;">
+            <label style="display: block; font-size: 11px; font-weight: 600; color: #1e293b; margin-bottom: 5px;">Descrição</label>
+            <textarea id="create-projeto-desc" placeholder="Uma breve descrição sobre este projeto..." style="width: 100%; padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; resize: vertical; min-height: 64px; box-sizing: border-box;"></textarea>
         </div>
 
         <div class="modal-footer-btns">

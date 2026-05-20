@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>DocuIA - Empresas</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=4">
     <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
     <script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
@@ -19,13 +19,13 @@
 
     <nav class="menu">
         <a href="/dashboard">
-            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Dashboard</span>
         </a>
         <a class="active" href="/empresas">
-            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Empresas</span>
         </a>
         <a href="/projetos">
-            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Projetos</span>
         </a>
     </nav>
 
@@ -78,7 +78,7 @@
 
         <section class="companies-grid" id="companies-grid">
             <!-- Empresas serão carregadas aqui via JS -->
-            <p style="padding: 20px; grid-column: 1/-1; text-align: center; color: #666;">Carregando empresas...</p>
+            <p style="padding: 16px; grid-column: 1/-1; text-align: center; color: #666;">Carregando empresas...</p>
         </section>
 
     </section>
@@ -108,16 +108,16 @@ async function loadCompanies() {
 function renderCompanies(companies) {
     const grid = document.getElementById('companies-grid');
     if (companies.length === 0) {
-        grid.innerHTML = '<p style="padding: 40px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não participa de nenhuma empresa.</p>';
+        grid.innerHTML = '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não participa de nenhuma empresa.</p>';
         return;
     }
 
-    const colors = ['purple', 'green', 'red-orange', 'blue'];
+    
 
     grid.innerHTML = companies.map((c, index) => `
         <article class="company-card" onclick="window.location.href='/empresa?id=${c.id}'" style="cursor: pointer;">
             <div class="company-card-top">
-                <div class="company-big-icon ${colors[index % colors.length]}">▤</div>
+                <div class="company-big-icon ${c.cor || 'indigo'}">▤</div>
                 <span class="dots">⋮</span>
             </div>
             <h2>${c.nome}</h2>
@@ -125,8 +125,8 @@ function renderCompanies(companies) {
                 ${c.dono_id === parseInt(localStorage.getItem('user_id')) ? '<span class="badge owner">♕ Proprietário</span>' : '<span class="badge">Membro</span>'}
             </div>
             <div class="company-card-footer">
-                <span><img src="/static/pngs/users.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> Membros</span>
-                <span><img src="/static/pngs/folder.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> Projetos</span>
+                <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Membros</span>
+                <span><img src="/static/pngs/folder.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Projetos</span>
             </div>
         </article>
     `).join('');
@@ -247,12 +247,12 @@ window.addEventListener("click", function(e) {
 <!-- MODAL DE OPÇÕES DE EMPRESA -->
 <div id="company-options-modal" class="modal-overlay">
     <div class="modal-card">
-        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 8px;">Empresa</h2>
-        <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">Escolha uma opção:</p>
+        <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Empresa</h2>
+        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Escolha uma opção:</p>
 
         <button class="modal-option-btn" onclick="openCreateCompanyPrompt()">
             <div class="option-icon blue-bg">
-                <img src="{{ url_for('static', path='pngs/plus.png') }}" style="width: 20px;" alt="+">
+                <img src="{{ url_for('static', path='pngs/plus.png') }}" style="width: 16px;" alt="+">
             </div>
             <div class="option-text">
                 <h3>Criar Nova Empresa</h3>
@@ -262,7 +262,7 @@ window.addEventListener("click", function(e) {
 
         <button class="modal-option-btn" onclick="openJoinCompanyPrompt()">
             <div class="option-icon green-bg">
-                <img src="{{ url_for('static', path='pngs/users.png') }}" style="width: 22px;" alt="Users">
+                <img src="{{ url_for('static', path='pngs/users.png') }}" style="width: 18px;" alt="Users">
             </div>
             <div class="option-text">
                 <h3>Entrar em uma Empresa</h3>
@@ -277,7 +277,7 @@ window.addEventListener("click", function(e) {
 <!-- MODAL CRIAR NOVA EMPRESA -->
 <div id="create-company-modal" class="modal-overlay">
     <div class="modal-card">
-        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 24px;">Criar Nova Empresa</h2>
+        <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 19px;">Criar Nova Empresa</h2>
         
         <div class="modal-form-group">
             <label>Nome da Empresa</label>
@@ -299,8 +299,8 @@ window.addEventListener("click", function(e) {
 <!-- MODAL ENTRAR EM EMPRESA -->
 <div id="join-company-modal" class="modal-overlay">
     <div class="modal-card">
-        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 8px;">Entrar em uma Empresa</h2>
-        <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">Digite o código de convite que você recebeu</p>
+        <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Entrar em uma Empresa</h2>
+        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Digite o código de convite que você recebeu</p>
 
         <div class="modal-form-group">
             <label>Código de Convite</label>
