@@ -166,6 +166,15 @@ async function loadProjects() {
         const activeProjects = projects.filter(p => p.status !== 'arquivado');
         renderProjects(activeProjects);
 
+        // 3. Carregar Empresas para o Select
+        const empResp = await fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() });
+        const companies = await handleResponse(empResp);
+        const selectEmpresa = document.getElementById('create-projeto-empresa');
+        if (selectEmpresa) {
+            selectEmpresa.innerHTML = '<option value="">Selecione uma empresa...</option>' + 
+                companies.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        }
+
     } catch (error) {
         console.error("Erro ao carregar projetos:", error);
     }
@@ -210,18 +219,31 @@ function renderProjects(projects) {
     `).join('');
 }
 
-// Criar Novo Projeto
-document.getElementById('btn-novo-projeto').addEventListener('click', async () => {
-    // Para criar um projeto fora da página de uma empresa, precisamos saber qual empresa usar.
-    // Como simplificação, vamos perguntar o ID da empresa ou o nome.
-    // Em um sistema real, teríamos um select com as empresas do usuário.
-    const empresaId = prompt("Digite o ID da empresa para este projeto:");
-    if (!empresaId) return;
+// Abrir Modal de Criar Projeto
+document.getElementById('btn-novo-projeto').addEventListener('click', () => {
+    document.getElementById('create-project-modal').classList.add('show');
+});
 
-    const nome = prompt("Digite o nome do novo projeto:");
-    if (!nome) return;
+function closeCreateProjectModal() {
+    document.getElementById('create-project-modal').classList.remove('show');
+    document.getElementById('create-projeto-nome').value = '';
+    document.getElementById('create-projeto-empresa').value = '';
+    document.getElementById('create-projeto-categoria').value = '';
+}
 
+async function submitCreateProject() {
+    const empresaId = document.getElementById('create-projeto-empresa').value;
+    const nome = document.getElementById('create-projeto-nome').value.trim();
+    const categoria = document.getElementById('create-projeto-categoria').value.trim() || "Geral";
+
+    if (!empresaId) return alert("Selecione uma empresa.");
+    if (!nome) return alert("O nome do projeto é obrigatório.");
+
+    const btn = document.querySelector('#create-project-modal .btn-acao');
     try {
+        btn.innerText = "Criando..."; 
+        btn.disabled = true;
+
         const resp = await fetch(API_URLS.projetos + "/projetos", {
             method: "POST",
             headers: authHeaders(),
@@ -229,16 +251,21 @@ document.getElementById('btn-novo-projeto').addEventListener('click', async () =
                 nome: nome,
                 descricao: "Projeto criado via lista geral",
                 empresa_id: parseInt(empresaId),
-                categoria: "Desenvolvimento"
+                categoria: categoria
             })
         });
         await handleResponse(resp);
+        
         alert("Projeto criado com sucesso!");
+        closeCreateProjectModal();
         loadProjects();
     } catch (error) {
         alert(error.message);
+    } finally {
+        btn.innerText = "Criar Projeto"; 
+        btn.disabled = false;
     }
-});
+}
 
 document.addEventListener('DOMContentLoaded', loadProjects);
 
@@ -247,6 +274,36 @@ function toggleUserMenu() {
     menu.classList.toggle("show");
 }
 </script>
+
+<!-- MODAL CRIAR NOVO PROJETO -->
+<div id="create-project-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 24px;">Criar Novo Projeto</h2>
+        
+        <div class="modal-form-group">
+            <label>Empresa</label>
+            <select id="create-projeto-empresa" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; color: #0f172a; margin-top: 4px;">
+                <option value="">Selecione uma empresa...</option>
+                <!-- Preenchido via JS -->
+            </select>
+        </div>
+
+        <div class="modal-form-group">
+            <label>Nome do Projeto</label>
+            <input type="text" id="create-projeto-nome" placeholder="Ex: Portal de Documentação">
+        </div>
+        
+        <div class="modal-form-group">
+            <label>Categoria</label>
+            <input type="text" id="create-projeto-categoria" placeholder="Ex: Desenvolvimento">
+        </div>
+        
+        <div class="modal-footer-btns">
+            <button class="btn-voltar" onclick="closeCreateProjectModal()">Cancelar</button>
+            <button class="btn-acao" onclick="submitCreateProject()">Criar Projeto</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

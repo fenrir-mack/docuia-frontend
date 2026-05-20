@@ -1,10 +1,20 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, Response
+import uvicorn
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-app = Flask(__name__)
+app = FastAPI(title="Frontend - DocuIA")
 
-@app.route("/api-config.js")
-def api_config_js():
+# Monta a pasta estática para o CSS e Imagens funcionarem
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Configura a pasta onde estão os HTMLs
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/api-config.js")
+async def api_config_js():
     """Gera um arquivo JS dinâmico com as URLs dos microserviços vindas do ambiente."""
     auth_url = os.getenv("AUTH_API_URL", "http://localhost:8001")
     empresas_url = os.getenv("EMPRESAS_API_URL", "http://localhost:8002")
@@ -19,95 +29,93 @@ def api_config_js():
         amigos: "{amigos_url}"
     }};
     """
-    return Response(js_content, mimetype="application/javascript")
+    return Response(content=js_content, media_type="application/javascript")
 
-@app.route("/", methods=["GET", "POST"])
-@app.route("/login", methods=["GET", "POST"])
-def login():
+@app.get("/", response_class=HTMLResponse)
+@app.get("/login", response_class=HTMLResponse)
+async def login_get(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
-    if request.method == "POST":
-        return redirect(url_for("dashboard"))
+@app.post("/")
+@app.post("/login")
+async def login_post(request: Request):
+    return RedirectResponse(url="/dashboard", status_code=303)
 
-    return render_template("login.html")
+@app.get("/cadastro", response_class=HTMLResponse)
+async def cadastro_get(request: Request):
+    return templates.TemplateResponse("cadastro.html", {"request": request})
 
+@app.post("/cadastro")
+async def cadastro_post(request: Request):
+    return RedirectResponse(url="/login", status_code=303)
 
-@app.route("/cadastro", methods=["GET", "POST"])
-def cadastro():
-    if request.method == "POST":
-        return redirect(url_for("login"))
-    return render_template("cadastro.html")
+@app.get("/esqueceu-senha", response_class=HTMLResponse)
+async def esqueceu_senha_get(request: Request):
+    return templates.TemplateResponse("esqueceu_senha.html", {"request": request})
 
+@app.post("/esqueceu-senha")
+async def esqueceu_senha_post(request: Request):
+    return RedirectResponse(url="/confirmacao-senha", status_code=303)
 
-@app.route("/esqueceu-senha", methods=["GET", "POST"])
-def esqueceu_senha():
-    if request.method == "POST":
-        return redirect(url_for("confirmacao_senha"))
-    return render_template("esqueceu_senha.html")
+@app.get("/confirmacao-senha", response_class=HTMLResponse)
+async def confirmacao_senha(request: Request):
+    return templates.TemplateResponse("confirmacao_senha.html", {"request": request})
 
+@app.get("/criar-senha", response_class=HTMLResponse)
+async def criar_senha_get(request: Request):
+    return templates.TemplateResponse("criar_senha.html", {"request": request})
 
-@app.route("/confirmacao-senha")
-def confirmacao_senha():
-    return render_template("confirmacao_senha.html")
+@app.post("/criar-senha")
+async def criar_senha_post(request: Request):
+    return RedirectResponse(url="/login", status_code=303)
 
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
-@app.route("/criar-senha", methods=["GET", "POST"])
-def criar_senha():
-    if request.method == "POST":
-        return redirect(url_for("login"))
-    return render_template("criar_senha.html")
+@app.get("/perfil", response_class=HTMLResponse)
+async def perfil(request: Request):
+    return templates.TemplateResponse("perfil.html", {"request": request})
 
+@app.get("/projeto", response_class=HTMLResponse)
+async def projeto(request: Request):
+    return templates.TemplateResponse("projeto.html", {"request": request})
 
-@app.route("/dashboard")
-def dashboard():
-    return render_template("dashboard.html")
+@app.get("/empresa", response_class=HTMLResponse)
+async def empresa(request: Request):
+    return templates.TemplateResponse("empresa.html", {"request": request})
 
-@app.route("/perfil")
-def perfil():
-    return render_template("perfil.html")
+@app.get("/empresa/membros", response_class=HTMLResponse)
+async def empresa_membros(request: Request):
+    return templates.TemplateResponse("empresa_membros.html", {"request": request})
 
+@app.get("/empresa/solicitacoes", response_class=HTMLResponse)
+async def empresa_solicitacoes(request: Request):
+    return templates.TemplateResponse("empresa_solicitacoes.html", {"request": request})
 
-@app.route("/projeto")
-def projeto():
-    # Página de um projeto específico
-    return render_template("projeto.html")
+@app.get("/empresa/configuracoes", response_class=HTMLResponse)
+async def empresa_configuracoes(request: Request):
+    return templates.TemplateResponse("empresa_configuracoes.html", {"request": request})
 
+@app.get("/projeto/membros", response_class=HTMLResponse)
+async def projeto_membros(request: Request):
+    return templates.TemplateResponse("projeto_membros.html", {"request": request})
 
-@app.route("/empresa")
-def empresa():
-    return render_template("empresa.html")
+@app.get("/projeto/solicitacoes", response_class=HTMLResponse)
+async def projeto_solicitacoes(request: Request):
+    return templates.TemplateResponse("projeto_solicitacoes.html", {"request": request})
 
-@app.route("/empresa/membros")
-def empresa_membros():
-    return render_template("empresa_membros.html")
+@app.get("/projeto/configuracoes", response_class=HTMLResponse)
+async def projeto_configuracoes(request: Request):
+    return templates.TemplateResponse("projeto_configuracoes.html", {"request": request})
 
-@app.route("/empresa/solicitacoes")
-def empresa_solicitacoes():
-    return render_template("empresa_solicitacoes.html")
+@app.get("/empresas", response_class=HTMLResponse)
+async def empresas(request: Request):
+    return templates.TemplateResponse("lista_empresas.html", {"request": request})
 
-@app.route("/empresa/configuracoes")
-def empresa_configuracoes():
-    return render_template("empresa_configuracoes.html")
-
-
-@app.route("/projeto/membros")
-def projeto_membros():
-    return render_template("projeto_membros.html")
-
-@app.route("/projeto/solicitacoes")
-def projeto_solicitacoes():
-    return render_template("projeto_solicitacoes.html")
-
-@app.route("/projeto/configuracoes")
-def projeto_configuracoes():
-    return render_template("projeto_configuracoes.html")
-
-@app.route("/empresas")
-def empresas():
-    return render_template("lista_empresas.html")
-
-@app.route("/projetos")
-def projetos():
-    return render_template("lista_projetos.html")
+@app.get("/projetos", response_class=HTMLResponse)
+async def projetos(request: Request):
+    return templates.TemplateResponse("lista_projetos.html", {"request": request})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=5000, reload=True)
