@@ -32,8 +32,8 @@ function authHeaders() {
 
 // Função genérica para tratar erros da API
 async function handleResponse(response) {
-    if (response.status === 401) {
-        // Token inválido ou expirado
+    if (response.status === 401 && !response.url.includes("/login") && !response.url.includes("/token")) {
+        // Token inválido ou expirado (apenas para rotas protegidas)
         removeToken();
         window.location.href = "/login"; // Redireciona pro login
         throw new Error("Sessão expirada. Faça login novamente.");

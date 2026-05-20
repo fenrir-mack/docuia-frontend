@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocuIA - Dashboard</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
-    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', path='js/api.js') }}"></script>
 </head>
 
 <body class="dashboard-body">
@@ -25,15 +25,15 @@
     <!-- MENU -->
     <nav class="menu">
         <a class="active" href="/dashboard">
-            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px;"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px;"> <span>Dashboard</span>
         </a>
 
         <a href="/empresas">
-            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px;"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px;"> <span>Empresas</span>
         </a>
 
         <a href="/projetos">
-            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px;"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px;"> <span>Projetos</span>
         </a>
     </nav>
 
@@ -101,7 +101,7 @@
 
                 <div class="stat-top">
                     <div class="stat-icon blue">
-                        <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:24px; height:24px; filter: brightness(0) invert(1);">
                     </div>
                 </div>
 
@@ -114,7 +114,7 @@
 
                 <div class="stat-top">
                     <div class="stat-icon green">
-                        <img src="{{ url_for('static', filename='pngs/file.png') }}" alt="Documentos" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/file.png') }}" alt="Documentos" style="width:24px; height:24px; filter: brightness(0) invert(1);">
                     </div>
                 </div>
 
@@ -127,7 +127,7 @@
 
                 <div class="stat-top">
                     <div class="stat-icon purple">
-                        <img src="{{ url_for('static', filename='pngs/presentation.png') }}" alt="Apresentações" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/presentation.png') }}" alt="Apresentações" style="width:24px; height:24px; filter: brightness(0) invert(1);">
                     </div>
                 </div>
 
@@ -140,7 +140,7 @@
 
                 <div class="stat-top">
                     <div class="stat-icon orange">
-                        <img src="{{ url_for('static', filename='pngs/diagram.png') }}" alt="Diagramas" style="width:24px; height:24px; filter: brightness(0) invert(1);">
+                        <img src="{{ url_for('static', path='pngs/diagram.png') }}" alt="Diagramas" style="width:24px; height:24px; filter: brightness(0) invert(1);">
                     </div>
                 </div>
 
@@ -158,7 +158,7 @@
             <div class="panel">
 
                 <div class="panel-title">
-                    <h2><img src="{{ url_for('static', filename='pngs/clock.png') }}" alt="Recentes" style="width:20px; height:20px; vertical-align:text-bottom;"> Projetos Recentes</h2>
+                    <h2><img src="{{ url_for('static', path='pngs/clock.png') }}" alt="Recentes" style="width:20px; height:20px; vertical-align:text-bottom;"> Projetos Recentes</h2>
 
                     <a href="/projetos">
                         Ver todos ›
@@ -177,7 +177,7 @@
 
                 <div class="panel-title">
 
-                    <h2><img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:20px; height:20px; vertical-align:text-bottom;"> Minhas Empresas</h2>
+                    <h2><img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:20px; height:20px; vertical-align:text-bottom;"> Minhas Empresas</h2>
 
                     <a href="/empresas">
                         Ver todas ›

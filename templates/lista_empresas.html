@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>DocuIA - Empresas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
-    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', path='js/api.js') }}"></script>
 </head>
 
 <body class="dashboard-body">
@@ -19,13 +19,13 @@
 
     <nav class="menu">
         <a href="/dashboard">
-            <img src="{{ url_for('static', filename='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
         </a>
         <a class="active" href="/empresas">
-            <img src="{{ url_for('static', filename='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
         </a>
         <a href="/projetos">
-            <img src="{{ url_for('static', filename='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
         </a>
     </nav>
 
@@ -253,7 +253,7 @@ window.addEventListener("click", function(e) {
 
         <button class="modal-option-btn" onclick="openCreateCompanyPrompt()">
             <div class="option-icon blue-bg">
-                <img src="{{ url_for('static', filename='pngs/plus.png') }}" style="width: 20px;" alt="+">
+                <img src="{{ url_for('static', path='pngs/plus.png') }}" style="width: 20px;" alt="+">
             </div>
             <div class="option-text">
                 <h3>Criar Nova Empresa</h3>
@@ -263,7 +263,7 @@ window.addEventListener("click", function(e) {
 
         <button class="modal-option-btn" onclick="openJoinCompanyPrompt()">
             <div class="option-icon green-bg">
-                <img src="{{ url_for('static', filename='pngs/users.png') }}" style="width: 22px;" alt="Users">
+                <img src="{{ url_for('static', path='pngs/users.png') }}" style="width: 22px;" alt="Users">
             </div>
             <div class="option-text">
                 <h3>Entrar em uma Empresa</h3>
