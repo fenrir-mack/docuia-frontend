@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
     <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
-    <script src="{{ url_for('static', path='js/api.js') }}"></script>
+    <script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
 </head>
 
 <body class="dashboard-body">
@@ -155,8 +155,7 @@
 async function loadProjects() {
     try {
         // 1. Perfil do Usuário
-        const userResp = await fetch(API_URLS.auth + "/perfil/me", { headers: authHeaders() });
-        const user = await handleResponse(userResp);
+        const user = await getUserProfile();
         document.getElementById('sidebar-user-name').innerText = user.nome;
         document.getElementById('sidebar-user-email').innerText = user.email;
 

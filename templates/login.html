@@ -62,7 +62,7 @@
 </main>
 
 <script src="/api-config.js"></script>
-<script src="{{ url_for('static', path='js/api.js') }}"></script>
+<script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
 <script>
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -86,13 +86,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         setToken(data.token);
 
         // Buscar o perfil para salvar o user_id no localStorage
-        const perfilResp = await fetch(API_URLS.auth + "/perfil/me", {
-            headers: authHeaders()
-        });
-        const perfil = await perfilResp.json().catch(() => null);
-        if (perfil && perfil.id) {
-            localStorage.setItem("user_id", perfil.id);
-        }
+        await getUserProfile(true);
         
         // Redireciona em caso de sucesso
         window.location.href = "/dashboard";

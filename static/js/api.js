@@ -16,6 +16,8 @@ function setToken(token) {
 
 function removeToken() {
     localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("user_id");
 }
 
 // Cabeçalhos padrão para requisições autenticadas
@@ -54,5 +56,20 @@ async function handleResponse(response) {
         throw new Error(errorMsg);
     }
     
+    return data;
+}
+
+// Busca o perfil do usuário (com cache)
+async function getUserProfile(forceRefresh = false) {
+    if (!forceRefresh) {
+        const cached = localStorage.getItem("userData");
+        if (cached) return JSON.parse(cached);
+    }
+    const response = await fetch(API_URLS.auth + "/perfil/me", { headers: authHeaders() });
+    const data = await handleResponse(response);
+    if (data && data.id) {
+        localStorage.setItem("userData", JSON.stringify(data));
+        localStorage.setItem("user_id", data.id);
+    }
     return data;
 }
