@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-app = FastAPI(title="Frontend - DocuIA")
+app = FastAPI(title="Frontend - DocIA")
 
 # Resolve o problema de HTTP/HTTPS no Azure (Mixed Content)
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
