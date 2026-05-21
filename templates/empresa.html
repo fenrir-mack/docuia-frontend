@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>DocuIA - Empresas</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=5">
     <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
     <script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
@@ -66,7 +66,7 @@
 
         <div class="project-header-section">
             <div class="project-title-area">
-                <div class="project-icon-large" style="background: #8b5cf6;">
+                <div class="project-icon-large indigo">
                     <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
                 <div class="project-info-large">
@@ -117,6 +117,18 @@
 <div class="help-btn">?</div>
 
 <script>
+const PROJECT_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
+
+function resolveProjectColor(projectCor, companyCor) {
+    if (PROJECT_COLOR_CLASSES.includes(projectCor)) {
+        return projectCor;
+    }
+    if (PROJECT_COLOR_CLASSES.includes(companyCor)) {
+        return companyCor;
+    }
+    return 'teal';
+}
+
 const urlParams = new URLSearchParams(window.location.search);
 const companyId = urlParams.get('id');
 
@@ -145,6 +157,11 @@ async function loadCompanyDetails() {
         const company = await handleResponse(compResp);
         document.getElementById('company-name').innerText = company.nome;
         document.getElementById('company-description').innerText = company.descricao || "Sem descrição disponível";
+        const companyIcon = document.querySelector('.project-icon-large');
+        if (companyIcon) {
+            companyIcon.classList.remove('teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan');
+            companyIcon.classList.add(resolveProjectColor(null, company.cor));
+        }
 
         // 3. Membros da Empresa (MS2)
         const membersResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/membros", {
@@ -167,7 +184,7 @@ async function loadCompanyDetails() {
             p.is_member = myProjectIds.includes(p.id);
         });
 
-        renderProjects(activeProjects);
+        renderProjects(activeProjects, company.cor);
         document.getElementById('stats-projects').innerText = activeProjects.length;
 
         // 5. Solicitações pendentes (badge na tab)
@@ -183,7 +200,7 @@ async function loadCompanyDetails() {
     }
 }
 
-function renderProjects(projects) {
+function renderProjects(projects, companyCor) {
     const list = document.getElementById('projects-list');
     if (projects.length === 0) {
         list.innerHTML = '<p style="padding: 16px; color: #666;">Nenhum projeto cadastrado nesta empresa.</p>';
@@ -192,7 +209,12 @@ function renderProjects(projects) {
 
     list.innerHTML = projects.map(p => `
         <div class="company-project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
-            <h4>${p.nome}</h4>
+            <div class="company-project-header">
+                <div class="project-icon company-project-icon ${resolveProjectColor(p.cor, companyCor)}">
+                    <img src="/static/pngs/folder.png" alt="Projeto" style="width: 13px; height: 13px;">
+                </div>
+                <h4>${p.nome}</h4>
+            </div>
             <p>
                 <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/users.png" style="width:11px; height:11px; "> ?</span>
                 <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/file.png" style="width:11px; height:11px; "> ? docs</span>

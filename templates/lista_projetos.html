@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>DocuIA - Projetos</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=5">
     <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
     <script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
@@ -152,6 +152,20 @@
 </div>
 
 <script>
+const PROJECT_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
+const companiesById = new Map();
+
+function resolveProjectColor(project) {
+    if (PROJECT_COLOR_CLASSES.includes(project.cor)) {
+        return project.cor;
+    }
+    const company = companiesById.get(project.empresa_id);
+    if (company && PROJECT_COLOR_CLASSES.includes(company.cor)) {
+        return company.cor;
+    }
+    return 'teal';
+}
+
 async function loadProjects() {
     try {
         // 1. Perfil do Usuário
@@ -159,15 +173,21 @@ async function loadProjects() {
         document.getElementById('sidebar-user-name').innerText = user.nome;
         document.getElementById('sidebar-user-email').innerText = user.email;
 
-        // 2. Carregar Projetos
-        const resp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        // 2. Carregar Projetos e Empresas
+        const [resp, empResp] = await Promise.all([
+            fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() }),
+            fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() })
+        ]);
         const projects = await handleResponse(resp);
+        const companies = await handleResponse(empResp);
+
+        companiesById.clear();
+        companies.forEach(c => companiesById.set(c.id, c));
+
         const activeProjects = projects.filter(p => p.status !== 'arquivado');
         renderProjects(activeProjects);
 
         // 3. Carregar Empresas para o Select
-        const empResp = await fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() });
-        const companies = await handleResponse(empResp);
         const selectEmpresa = document.getElementById('create-projeto-empresa');
         if (selectEmpresa) {
             selectEmpresa.innerHTML = '<option value="">Selecione uma empresa...</option>' + 
@@ -190,7 +210,9 @@ function renderProjects(projects) {
         <article class="project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
             <div class="project-top">
                 <div class="project-main-info">
-                    <div class="project-icon ${p.cor || 'teal'}">▣</div>
+                    <div class="project-icon ${resolveProjectColor(p)}">
+                        <img src="/static/pngs/folder.png" alt="Projeto" style="width: 15px; height: 15px;">
+                    </div>
                     <div>
                         <div class="project-title-row">
                             <h2>${p.nome}</h2>

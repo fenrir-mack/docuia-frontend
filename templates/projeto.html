@@ -179,6 +179,10 @@ async function loadProjectDetails() {
             headers: authHeaders()
         });
         const project = await handleResponse(projResp);
+        const projectIcon = document.querySelector('.project-icon-large');
+        if (projectIcon) {
+            projectIcon.classList.add(project.cor || 'teal');
+        }
         
         document.getElementById('project-name').innerText = project.nome + (project.status === 'arquivado' ? ' (Arquivado)' : '');
         document.getElementById('project-description').innerText = project.descricao || "Sem descrição disponível";

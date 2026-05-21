@@ -205,6 +205,10 @@ async function loadConfigPage() {
 
         const projResp = await fetch(API_URLS.projetos + "/projetos/" + projectId, { headers: authHeaders() });
         const project = await handleResponse(projResp);
+        const projectIcon = document.querySelector('.project-icon-large');
+        if (projectIcon) {
+            projectIcon.classList.add(project.cor || 'teal');
+        }
         document.getElementById('project-name').innerText = project.nome;
         document.getElementById('project-description').innerText = project.descricao || "";
         document.querySelector('input[type="text"]').value = project.nome;

@@ -1460,6 +1460,10 @@ input:-webkit-autofill:active {
     align-items: center;
 }
 
+.project-icon img {
+    display: block;
+}
+
 .project-title-row {
     display: flex;
     align-items: center;
@@ -2062,6 +2066,20 @@ input:-webkit-autofill:active {
     margin: 0 0 6px 0;
     font-size: 13px;
     color: #111827;
+}
+
+.company-project-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 6px;
+}
+
+.company-project-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex: 0 0 auto;
 }
 .company-project-card p {
     margin: 0;

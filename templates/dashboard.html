@@ -260,6 +260,20 @@ window.addEventListener("click", function(e) {
 
 <script>
 // Lógica de carregamento de dados do Dashboard
+const PROJECT_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
+const companiesById = new Map();
+
+function resolveProjectColor(project) {
+    if (PROJECT_COLOR_CLASSES.includes(project.cor)) {
+        return project.cor;
+    }
+    const company = companiesById.get(project.empresa_id);
+    if (company && PROJECT_COLOR_CLASSES.includes(company.cor)) {
+        return company.cor;
+    }
+    return 'indigo';
+}
+
 async function loadDashboardData() {
     try {
         // 1. Carregar Perfil do Usuário (MS1)
@@ -274,6 +288,8 @@ async function loadDashboardData() {
             headers: authHeaders()
         });
         const companies = await handleResponse(companiesResponse);
+        companiesById.clear();
+        companies.forEach(c => companiesById.set(c.id, c));
         renderCompanies(companies);
 
         // 3. Carregar Projetos (MS3)
@@ -332,7 +348,7 @@ function renderProjects(projects) {
 
     container.innerHTML = projects.map(p => `
         <a href="/projeto?id=${p.id}" class="list-item" style="text-decoration: none; color: inherit;">
-            <div class="item-icon ${p.cor || 'indigo'}">
+            <div class="item-icon ${resolveProjectColor(p)}">
                 <img src="/static/pngs/folder.png" alt="Projeto" style="width:16px; height:16px; ">
             </div>
             <div class="item-text">
