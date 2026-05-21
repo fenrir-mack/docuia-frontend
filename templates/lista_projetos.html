@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>DocuIA - Projetos</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=5">
     <script src="{{ url_for('static', path='js/auth-guard.js') }}"></script>
     <script src="/api-config.js"></script>
     <script src="{{ url_for('static', path='js/api.js?v=2') }}"></script>
@@ -23,15 +23,15 @@
     <nav class="menu">
 
         <a href="/dashboard">
-            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Dashboard</span>
         </a>
 
         <a href="/empresas">
-            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Empresas</span>
         </a>
 
         <a class="active" href="/projetos">
-            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Projetos</span>
         </a>
 
     </nav>
@@ -140,7 +140,7 @@
         <!-- GRID -->
         <section class="projects-grid" id="projects-grid">
             <!-- Projetos serão carregados aqui via JS -->
-            <p style="padding: 40px; grid-column: 1/-1; text-align: center; color: #666;">Carregando projetos...</p>
+            <p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Carregando projetos...</p>
         </section>
 
     </section>
@@ -152,6 +152,20 @@
 </div>
 
 <script>
+const PROJECT_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
+const companiesById = new Map();
+
+function resolveProjectColor(project) {
+    if (PROJECT_COLOR_CLASSES.includes(project.cor)) {
+        return project.cor;
+    }
+    const company = companiesById.get(project.empresa_id);
+    if (company && PROJECT_COLOR_CLASSES.includes(company.cor)) {
+        return company.cor;
+    }
+    return 'teal';
+}
+
 async function loadProjects() {
     try {
         // 1. Perfil do Usuário
@@ -159,15 +173,21 @@ async function loadProjects() {
         document.getElementById('sidebar-user-name').innerText = user.nome;
         document.getElementById('sidebar-user-email').innerText = user.email;
 
-        // 2. Carregar Projetos
-        const resp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        // 2. Carregar Projetos e Empresas
+        const [resp, empResp] = await Promise.all([
+            fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() }),
+            fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() })
+        ]);
         const projects = await handleResponse(resp);
+        const companies = await handleResponse(empResp);
+
+        companiesById.clear();
+        companies.forEach(c => companiesById.set(c.id, c));
+
         const activeProjects = projects.filter(p => p.status !== 'arquivado');
         renderProjects(activeProjects);
 
         // 3. Carregar Empresas para o Select
-        const empResp = await fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() });
-        const companies = await handleResponse(empResp);
         const selectEmpresa = document.getElementById('create-projeto-empresa');
         if (selectEmpresa) {
             selectEmpresa.innerHTML = '<option value="">Selecione uma empresa...</option>' + 
@@ -182,7 +202,7 @@ async function loadProjects() {
 function renderProjects(projects) {
     const grid = document.getElementById('projects-grid');
     if (projects.length === 0) {
-        grid.innerHTML = '<p style="padding: 40px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não possui projetos.</p>';
+        grid.innerHTML = '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não possui projetos.</p>';
         return;
     }
 
@@ -190,7 +210,9 @@ function renderProjects(projects) {
         <article class="project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
             <div class="project-top">
                 <div class="project-main-info">
-                    <div class="project-icon">▣</div>
+                    <div class="project-icon ${resolveProjectColor(p)}">
+                        <img src="/static/pngs/folder.png" alt="Projeto" style="width: 15px; height: 15px;">
+                    </div>
                     <div>
                         <div class="project-title-row">
                             <h2>${p.nome}</h2>
@@ -210,8 +232,8 @@ function renderProjects(projects) {
             <p class="project-description">${p.descricao || 'Sem descrição'}</p>
             <p class="project-link">${p.link_repo || 'Sem repositório vinculado'}</p>
             <div class="project-footer">
-                <span><img src="/static/pngs/users.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> ?</span>
-                <span><img src="/static/pngs/file.png" style="width:14px; height:14px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> ?</span>
+                <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> ?</span>
+                <span><img src="/static/pngs/file.png" style="width:11px; height:11px; vertical-align:text-bottom; "> ?</span>
                 <span>◫ ${new Date(p.criado_em).toLocaleDateString()}</span>
             </div>
         </article>
@@ -277,11 +299,11 @@ function toggleUserMenu() {
 <!-- MODAL CRIAR NOVO PROJETO -->
 <div id="create-project-modal" class="modal-overlay">
     <div class="modal-card">
-        <h2 style="font-size: 24px; font-weight: 800; color: #020617; margin-bottom: 24px;">Criar Novo Projeto</h2>
+        <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 19px;">Criar Novo Projeto</h2>
         
         <div class="modal-form-group">
             <label>Empresa</label>
-            <select id="create-projeto-empresa" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; color: #0f172a; margin-top: 4px;">
+            <select id="create-projeto-empresa" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; color: #0f172a; margin-top: 3px;">
                 <option value="">Selecione uma empresa...</option>
                 <!-- Preenchido via JS -->
             </select>

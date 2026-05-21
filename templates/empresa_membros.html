@@ -19,13 +19,13 @@
 
     <nav class="menu">
         <a href="/dashboard">
-            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Dashboard</span>
         </a>
         <a class="active" href="/empresas">
-            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Empresas</span>
         </a>
         <a href="/projetos">
-            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Projetos</span>
         </a>
     </nav>
 
@@ -51,16 +51,16 @@
 
 <main class="dashboard-main">
 
-    <section class="project-internal-content" style="padding: 24px;">
+    <section class="project-internal-content" style="padding: 19px;">
 
-        <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 24px; text-decoration: none;">
-            <span style="margin-right: 8px; font-size: 18px;">←</span> Sair da Empresa
+        <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 19px; text-decoration: none;">
+            <span style="margin-right: 6px; font-size: 14px;">←</span> Sair da Empresa
         </a>
 
         <div class="project-header-section">
             <div class="project-title-area">
                 <div class="project-icon-large" style="background: #8b5cf6;">
-                    <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:28px; height:28px; filter: brightness(0) invert(1);">
+                    <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
                 <div class="project-info-large">
                     <h1 id="company-name">Carregando...</h1>
@@ -71,16 +71,16 @@
 
                 <div class="company-stats-grid">
             <div class="company-stat-card">
-                <span><img src="/static/pngs/folder.png" alt="Projetos" style="width:14px; height:14px;"> Projetos</span>
+                <span><img src="/static/pngs/folder.png" alt="Projetos" style="width:11px; height:11px;"> Projetos</span>
                 <strong id="stats-projects">0</strong>
             </div>
             <div class="company-stat-card">
-                <span><img src="/static/pngs/users.png" alt="Membros" style="width:14px; height:14px;"> Membros</span>
+                <span><img src="/static/pngs/users.png" alt="Membros" style="width:11px; height:11px;"> Membros</span>
                 <strong id="stats-members">0</strong>
             </div>
             <div class="company-stat-card">
-                <span><img src="/static/pngs/file.png" alt="Documentos" style="width:14px; height:14px;"> Documentos</span>
-                <strong style="font-size: 14px; font-weight: normal; color: #6b7280; padding-top: 4px;">Em breve</strong>
+                <span><img src="/static/pngs/file.png" alt="Documentos" style="width:11px; height:11px;"> Documentos</span>
+                <strong style="font-size: 11px; font-weight: normal; color: #6b7280; padding-top: 3px;">Em breve</strong>
             </div>
         </div>
 
@@ -96,7 +96,7 @@
         </div>
 
         <div class="member-list" id="members-list">
-            <p style="padding: 20px; color: #666;">Carregando membros...</p>
+            <p style="padding: 16px; color: #666;">Carregando membros...</p>
         </div>
 
     </section>
@@ -175,7 +175,7 @@ const roleClasses = { owner: 'owner', admin: 'admin', member: 'member' };
 function renderMembers(members) {
     const list = document.getElementById('members-list');
     if (members.length === 0) {
-        list.innerHTML = '<p style="padding: 20px; color: #666;">Nenhum membro encontrado.</p>';
+        list.innerHTML = '<p style="padding: 16px; color: #666;">Nenhum membro encontrado.</p>';
         return;
     }
 
@@ -196,17 +196,17 @@ function renderMembers(members) {
         if (canEdit) {
             const ownerOption = myRole === 'owner' ? `<option value="owner" ${m.role === 'owner' ? 'selected' : ''}>♕ Owner</option>` : '';
             actionsHtml += `
-                <button class="btn-outline" id="btn-edit-${m.usuario_id}" onclick="enableEdit(${m.usuario_id})" style="padding: 4px 8px; font-size: 12px; margin-left: 8px;">Editar</button>
+                <button class="btn-outline" id="btn-edit-${m.usuario_id}" onclick="enableEdit(${m.usuario_id})" style="padding: 3px 6px; font-size: 10px; margin-left: 6px;">Editar</button>
 
-                <div id="edit-controls-${m.usuario_id}" style="display: none; align-items: center; gap: 8px; margin-left: 8px;">
-                    <select class="form-control" id="select-role-${m.usuario_id}" style="width: 110px; padding: 4px; font-size: 13px;">
+                <div id="edit-controls-${m.usuario_id}" style="display: none; align-items: center; gap: 6px; margin-left: 6px;">
+                    <select class="form-control" id="select-role-${m.usuario_id}" style="width: 88px; padding: 3px; font-size: 10px;">
                         ${ownerOption}
                         <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>⬡ Admin</option>
                         <option value="member" ${m.role === 'member' ? 'selected' : ''}>♙ Member</option>
                     </select>
-                    <button class="btn-primary" onclick="confirmEdit(${m.usuario_id})" style="padding: 4px 12px; font-size: 12px;">Salvar</button>
-                    <button onclick="removerMembro(${m.usuario_id})" class="btn-outline" style="border-color: #dc2626; color: #dc2626; padding: 4px 8px; font-size: 12px;">Remover</button>
-                    <button onclick="cancelEdit(${m.usuario_id})" class="btn-outline" style="padding: 4px; font-size: 12px; border: none; background: transparent; color: #64748b;" title="Cancelar">✕</button>
+                    <button class="btn-primary" onclick="confirmEdit(${m.usuario_id})" style="padding: 3px 10px; font-size: 10px;">Salvar</button>
+                    <button onclick="removerMembro(${m.usuario_id})" class="btn-outline" style="border-color: #dc2626; color: #dc2626; padding: 3px 6px; font-size: 10px;">Remover</button>
+                    <button onclick="cancelEdit(${m.usuario_id})" class="btn-outline" style="padding: 3px; font-size: 10px; border: none; background: transparent; color: #64748b;" title="Cancelar">✕</button>
                 </div>
             `;
         }

@@ -21,13 +21,13 @@
 
     <nav class="menu">
         <a href="/dashboard">
-            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Dashboard</span>
+            <img src="{{ url_for('static', path='pngs/dashboard.png') }}" alt="Dashboard" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Dashboard</span>
         </a>
         <a href="/empresas">
-            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:18px; height:18px; vertical-align:text-bottom; filter: grayscale(100%) opacity(0.6);"> <span>Empresas</span>
+            <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresas" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Empresas</span>
         </a>
         <a class="active" href="/projetos">
-            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:18px; height:18px; vertical-align:text-bottom; filter: brightness(0) invert(1);"> <span>Projetos</span>
+            <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:14px; height:14px; vertical-align:text-bottom; "> <span>Projetos</span>
         </a>
     </nav>
 
@@ -54,7 +54,7 @@
 <!-- MAIN -->
 <main class="dashboard-main">
 
-    <section class="project-internal-content" style="padding: 24px;">
+    <section class="project-internal-content" style="padding: 19px;">
 
         <div class="project-header-section">
             <a href="/projetos" class="back-to-projects" id="back-link">
@@ -62,12 +62,12 @@
             </a>
             <div class="project-title-area">
                 <div class="project-icon-large">
-                    <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Folder" style="width:28px; height:28px; filter: brightness(0) invert(1);">
+                    <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Folder" style="width:22px; height:22px; ">
                 </div>
                 <div class="project-info-large">
                     <h1 id="project-name">Carregando...</h1>
                     <p id="project-description">Carregando descrição do projeto...</p>
-                    <p id="project-enterprise" style="margin-top: 4px; font-size: 13px;">Empresa: Carregando...</p>
+                    <p id="project-enterprise" style="margin-top: 3px; font-size: 10px;">Empresa: Carregando...</p>
                 </div>
             </div>
         </div>
@@ -84,7 +84,7 @@
         </div>
 
         <div class="member-list" id="members-list">
-            <p style="padding: 20px; color: #666;">Carregando membros...</p>
+            <p style="padding: 16px; color: #666;">Carregando membros...</p>
         </div>
 
     </section>
@@ -118,6 +118,10 @@ async function loadMembersPage() {
         // 2. Detalhes do Projeto (MS3)
         const projResp = await fetch(API_URLS.projetos + "/projetos/" + projectId, { headers: authHeaders() });
         const project = await handleResponse(projResp);
+        const projectIcon = document.querySelector('.project-icon-large');
+        if (projectIcon) {
+            projectIcon.classList.add(project.cor || 'teal');
+        }
         document.getElementById('project-name').innerText = project.nome;
         document.getElementById('project-description').innerText = project.descricao || "Sem descrição";
 
@@ -161,7 +165,7 @@ const roleClasses = { owner: 'owner', admin: 'admin', member: 'member' };
 function renderMembers(members) {
     const list = document.getElementById('members-list');
     if (members.length === 0) {
-        list.innerHTML = '<p style="padding: 20px; color: #666;">Nenhum membro encontrado.</p>';
+        list.innerHTML = '<p style="padding: 16px; color: #666;">Nenhum membro encontrado.</p>';
         return;
     }
 
