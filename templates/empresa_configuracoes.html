@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -34,12 +34,12 @@
 
         <div class="user-dropdown-area">
             <div class="user-menu" id="userMenu">
-                <a href="/perfil">♙ Meu Perfil</a>
+                <a href="/perfil"><img src="{{ url_for('static', path='pngs/user.png') }}" alt="Meu Perfil">Meu Perfil</a>
 
 
                 <div class="menu-divider"></div>
 
-                <a href="/login" class="logout-link">↪ Sair</a>
+                <a href="/login" class="logout-link"><img src="{{ url_for('static', path='pngs/corner-down-right.png') }}" alt="Sair">Sair</a>
             </div>
 
             <button class="user-box user-toggle" onclick="toggleUserMenu()">
@@ -50,7 +50,7 @@
                     <p id="sidebar-user-email">...</p>
                 </div>
 
-                <span class="dropdown-arrow">⌄</span>
+                <span class="dropdown-arrow"><img src="{{ url_for('static', path='pngs/down-arrow.png') }}" alt="Abrir menu"></span>
             </button>
         </div>
     </div>
@@ -61,7 +61,7 @@
     <section class="project-internal-content" style="padding: 19px;">
 
         <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 19px; text-decoration: none;">
-            <span>←</span> Sair da Empresa
+            <span style="margin-right: 6px;">←</span> Sair da Empresa
         </a>
 
         <div class="project-header-section">
@@ -141,6 +141,13 @@
                 <p class="danger-sub" style="color: #991b1b; margin: 0;">Ações destrutivas para esta empresa.</p>
             </div>
             <div style="padding: 19px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 13px; margin-bottom: 16px;">
+                    <div>
+                        <h4 style="color: #1e293b; font-size: 12px; margin-bottom: 3px;">Sair da Empresa</h4>
+                        <p style="color: #64748b; font-size: 10px; margin-bottom: 0;">Remove seu acesso a esta empresa.</p>
+                    </div>
+                    <button class="btn-danger-outline" style="white-space: nowrap;" onclick="sairDaEmpresa()">Sair</button>
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 13px;">
                     <div>
                         <h4 style="color: #1e293b; font-size: 12px; margin-bottom: 3px;">Excluir Empresa</h4>
@@ -248,8 +255,8 @@ async function loadConfigPage() {
             const papeis = await papeisResp.json();
             const rolesContainer = document.getElementById('roles-container');
             rolesContainer.innerHTML = papeis.map(p => {
-                const icons = { 'Owner': '♕', 'Admin': '⬡', 'Member': '♙' };
-                const icon = icons[p.nome] || '◈';
+                const icons = { 'Owner': '♕', 'Admin': '★', 'Member': '•' };
+                const icon = icons[p.nome] || '•';
                 const permTags = p.permissoes.split(',').filter(x => x).map(perm => {
                     const label = perm.replace(/_/g, ' ');
                     return `<span class="perm-tag" style="text-transform: capitalize;">${label}</span>`;
@@ -271,7 +278,16 @@ async function loadConfigPage() {
         const solResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/solicitacoes", { headers: authHeaders() });
         const solicitacoes = await handleResponse(solResp);
         const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
-        if (pendentes > 0) { document.getElementById('tab-badge-sol').innerText = pendentes; document.getElementById('tab-badge-sol').style.display = 'flex'; }
+        const badge = document.getElementById('tab-badge-sol');
+        if (badge) {
+            if (pendentes > 0) {
+                badge.innerText = pendentes;
+                badge.style.display = 'flex';
+            } else {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
 
         // Carregar contagens para os stats
         const membersResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/membros", { headers: authHeaders() });
@@ -280,7 +296,7 @@ async function loadConfigPage() {
 
         const projResp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
         const allProjects = await handleResponse(projResp);
-        const companyProjects = allProjects.filter(p => p.empresa_id == companyId && p.status !== 'arquivado');
+        const companyProjects = allProjects.filter(p => p.empresa_id == companyId && p.status !== 'arquivado' && p.status !== 'excluido');
         document.getElementById('stats-projects').innerText = companyProjects.length;
 
     } catch (error) {
@@ -336,8 +352,26 @@ window.addEventListener("click", function(e) {
         }
     }
 
+    async function sairDaEmpresa() {
+        if (!confirm("Tem certeza que deseja sair desta empresa?")) return;
+
+        try {
+            const resp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/sair", {
+                method: "DELETE",
+                headers: authHeaders()
+            });
+            await handleResponse(resp);
+            alert("Você saiu da empresa.");
+            window.location.href = "/empresas";
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
 document.addEventListener('DOMContentLoaded', loadConfigPage);
 </script>
 
 </body>
 </html>
+
+

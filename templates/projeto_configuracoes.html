@@ -44,16 +44,12 @@
 
             <div class="user-menu" id="userMenu">
 
-                <a href="/perfil">
-                    Meu Perfil
-                </a>
+                <a href="/perfil"><img src="{{ url_for('static', path='pngs/user.png') }}" alt="Meu Perfil">Meu Perfil</a>
 
 
                 <div class="menu-divider"></div>
 
-                <a href="/login" class="logout-link">
-                    Sair
-                </a>
+                <a href="/login" class="logout-link"><img src="{{ url_for('static', path='pngs/corner-down-right.png') }}" alt="Sair">Sair</a>
 
             </div>
 
@@ -68,7 +64,7 @@
                     <p id="sidebar-user-email">email@exemplo.com</p>
                 </div>
 
-                <span class="dropdown-arrow">⌄</span>
+                <span class="dropdown-arrow"><img src="{{ url_for('static', path='pngs/down-arrow.png') }}" alt="Abrir menu"></span>
 
             </button>
 
@@ -135,7 +131,10 @@
                 <textarea id="input-project-description"></textarea>
             </div>
 
-            <button class="btn-primary" style="margin-top: 19px;" id="btn-salvar">Salvar Alterações</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 19px;">
+                <button type="button" class="btn-primary" id="btn-salvar">Salvar Alterações</button>
+                <button type="button" class="btn-danger-outline" id="btn-arquivar">Arquivar Projeto</button>
+            </div>
         </div>
 
         <div class="config-section">
@@ -153,12 +152,19 @@
                 <p class="danger-sub" style="color: #991b1b; margin: 0;">Ações destrutivas para este projeto.</p>
             </div>
             <div style="padding: 19px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 13px; margin-bottom: 16px;">
+                    <div>
+                        <h4 style="color: #1e293b; font-size: 12px; margin-bottom: 3px;">Sair do Projeto</h4>
+                        <p style="color: #64748b; font-size: 10px; margin-bottom: 0;">Remove seu acesso a este projeto.</p>
+                    </div>
+                    <button type="button" class="btn-danger-outline" style="white-space: nowrap;" onclick="sairDoProjeto()">Sair</button>
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 13px;">
                     <div>
-                        <h4 style="color: #1e293b; font-size: 12px; margin-bottom: 3px;">Arquivar Projeto</h4>
-                        <p style="color: #64748b; font-size: 10px; margin-bottom: 0;">O projeto será arquivado e não aparecerá mais como ativo.</p>
+                        <h4 style="color: #1e293b; font-size: 12px; margin-bottom: 3px;">Excluir Projeto</h4>
+                        <p style="color: #64748b; font-size: 10px; margin-bottom: 0;">O projeto será ocultado e só poderá ser restaurado por um administrador do sistema.</p>
                     </div>
-                    <button class="btn-primary" style="background-color: #dc2626; border-color: #dc2626; white-space: nowrap;" id="btn-arquivar">Arquivar Projeto</button>
+                    <button type="button" class="btn-primary" style="background-color: #dc2626; border-color: #dc2626; white-space: nowrap;" id="btn-excluir">Excluir Projeto</button>
                 </div>
             </div>
         </div>
@@ -246,6 +252,30 @@ async function loadConfigPage() {
         document.getElementById('input-project-name').value = project.nome || "";
         document.getElementById('input-project-description').value = project.descricao || "";
 
+        // Guard: sem acesso ao projeto -> volta para empresa; se nem é membro da empresa -> dashboard
+        const myProjectsResp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        const myProjects = await handleResponse(myProjectsResp);
+        const hasProjectAccess = myProjects.some(p => String(p.id) === String(projectId));
+        if (!hasProjectAccess) {
+            let isCompanyMember = false;
+            try {
+                const membersResp = await fetch(API_URLS.empresas + `/empresas/${project.empresa_id}/membros`, { headers: authHeaders() });
+                const members = await handleResponse(membersResp);
+                isCompanyMember = Array.isArray(members) && members.some(m => String(m.usuario_id) === String(user.id));
+            } catch {}
+
+            if (!isCompanyMember) {
+                try {
+                    const compResp = await fetch(API_URLS.empresas + `/empresas/${project.empresa_id}`, { headers: authHeaders() });
+                    const company = await handleResponse(compResp);
+                    isCompanyMember = String(company.dono_id) === String(user.id);
+                } catch {}
+            }
+
+            window.location.href = isCompanyMember ? `/empresa?id=${project.empresa_id}` : "/dashboard";
+            return;
+        }
+
         const compResp = await fetch(API_URLS.empresas + "/empresas/" + project.empresa_id, { headers: authHeaders() });
         const company = await handleResponse(compResp);
         document.getElementById('project-enterprise').innerText = "Empresa: " + company.nome;
@@ -278,9 +308,9 @@ async function loadConfigPage() {
         const rolesContainer = document.getElementById('roles-container');
         if (rolesContainer) {
             const defaultRoles = [
-                { nome: 'Owner', descricao: 'Controle total do projeto', permissoes: 'ler,escrever,administrar,deletar' },
-                { nome: 'Editor', descricao: 'Pode criar e editar conteúdo', permissoes: 'ler,escrever' },
-                { nome: 'Viewer', descricao: 'Apenas visualização', permissoes: 'ler' }
+                { nome: 'Owner', descricao: 'Controle total do projeto', permissoes: 'gerenciar_membros,editar_configuracoes,excluir_projeto' },
+                { nome: 'Admin', descricao: 'Pode gerenciar projetos e membros', permissoes: 'gerenciar_membros,editar_configuracoes' },
+                { nome: 'Member', descricao: 'Acesso básico à empresa', permissoes: 'ver_projeto' }
             ];
 
             let papeis = defaultRoles;
@@ -293,17 +323,34 @@ async function loadConfigPage() {
             } catch {}
 
             rolesContainer.innerHTML = papeis.map((p) => {
+                const roleLabel = (name) => {
+                    const n = String(name || '').trim();
+                    const key = n.toLowerCase();
+                    if (key === 'admin') return '⬡ Admin';
+                    if (key === 'member') return '♙ Member';
+                    return n || 'Role';
+                };
+                const permLabel = (perm) => {
+                    const map = {
+                        gerenciar_membros: 'Gerenciar membros',
+                        editar_configuracoes: 'Editar configurações',
+                        excluir_projeto: 'Excluir projeto',
+                        ver_projeto: 'Ver o projeto'
+                    };
+                    return map[perm] || perm.replace(/_/g, ' ');
+                };
+
                 const permTags = String(p.permissoes || '')
                     .split(',')
                     .map(x => x.trim())
                     .filter(Boolean)
-                    .map(perm => `<span class="perm-tag" style="text-transform: capitalize;">${perm.replace(/_/g, ' ')}</span>`)
+                    .map(perm => `<span class="perm-tag">${permLabel(perm)}</span>`)
                     .join('');
 
                 return `
                 <div class="rbac-role">
                     <div>
-                        <h4>${p.nome}</h4>
+                        <h4>${roleLabel(p.nome)}</h4>
                         <p>${p.descricao || ''}</p>
                         <div class="permission-tags">
                             ${permTags}
@@ -349,6 +396,38 @@ document.getElementById('btn-arquivar').addEventListener('click', async () => {
         alert(error.message);
     }
 });
+
+document.getElementById('btn-excluir').addEventListener('click', async () => {
+    if (!confirm("Tem certeza que deseja excluir este projeto? Ele ficará oculto e só um administrador poderá restaurar.")) return;
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId, {
+            method: "DELETE",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        alert("Projeto excluído (oculto) com sucesso.");
+        window.location.href = "/projetos";
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+async function sairDoProjeto() {
+    if (!confirm("Tem certeza que deseja sair deste projeto?")) return;
+
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/sair", {
+            method: "DELETE",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        alert("Você saiu do projeto.");
+        window.location.href = "/projetos";
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 function toggleUserMenu() {
     const menu = document.getElementById("userMenu");
     menu.classList.toggle("show");
@@ -367,5 +446,6 @@ document.addEventListener('DOMContentLoaded', loadConfigPage);
 
 </body>
 </html>
+
 
 

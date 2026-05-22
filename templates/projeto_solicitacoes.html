@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -33,9 +33,9 @@
     <div class="sidebar-bottom">
         <div class="user-dropdown-area">
             <div class="user-menu" id="userMenu">
-                <a href="/perfil">♙ Meu Perfil</a>
+                <a href="/perfil"><img src="{{ url_for('static', path='pngs/user.png') }}" alt="Meu Perfil">Meu Perfil</a>
                 <div class="menu-divider"></div>
-                <a href="/login" class="logout-link">↪ Sair</a>
+                <a href="/login" class="logout-link"><img src="{{ url_for('static', path='pngs/corner-down-right.png') }}" alt="Sair">Sair</a>
             </div>
             <button class="user-box user-toggle" onclick="toggleUserMenu()">
                 <div class="profile-mini-avatar">U</div>
@@ -43,7 +43,7 @@
                     <strong id="sidebar-user-name">Usuário</strong>
                     <p id="sidebar-user-email">email@exemplo.com</p>
                 </div>
-                <span class="dropdown-arrow">⌄</span>
+                <span class="dropdown-arrow"><img src="{{ url_for('static', path='pngs/down-arrow.png') }}" alt="Abrir menu"></span>
             </button>
         </div>
     </div>
@@ -140,7 +140,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const projectId = urlParams.get('id');
 
 if (!projectId) {
-    alert("Projeto não especificado!");
+        alert("Projeto não especificado!");
     window.location.href = "/projetos";
 }
 
@@ -163,6 +163,30 @@ async function loadSolicitacoesPage() {
         fetch(API_URLS.projetos + `/projetos/${projectId}/acessos`, { method: "POST", headers: authHeaders() }).catch(() => {});
         document.getElementById('project-name').innerText = project.nome;
         document.getElementById('project-description').innerText = project.descricao || "Sem descrição";
+
+        // Guard: sem acesso ao projeto -> volta para empresa; se nem é membro da empresa -> dashboard
+        const myProjectsResp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        const myProjects = await handleResponse(myProjectsResp);
+        const hasProjectAccess = myProjects.some(p => String(p.id) === String(projectId));
+        if (!hasProjectAccess) {
+            let isCompanyMember = false;
+            try {
+                const membersResp = await fetch(API_URLS.empresas + `/empresas/${project.empresa_id}/membros`, { headers: authHeaders() });
+                const members = await handleResponse(membersResp);
+                isCompanyMember = Array.isArray(members) && members.some(m => String(m.usuario_id) === String(user.id));
+            } catch {}
+
+            if (!isCompanyMember) {
+                try {
+                    const compResp = await fetch(API_URLS.empresas + `/empresas/${project.empresa_id}`, { headers: authHeaders() });
+                    const company = await handleResponse(compResp);
+                    isCompanyMember = String(company.dono_id) === String(user.id);
+                } catch {}
+            }
+
+            window.location.href = isCompanyMember ? `/empresa?id=${project.empresa_id}` : "/dashboard";
+            return;
+        }
 
         // 3. Empresa (MS2)
         const compResp = await fetch(API_URLS.empresas + "/empresas/" + project.empresa_id, { headers: authHeaders() });
@@ -222,6 +246,7 @@ function renderSolicitacoes(solicitacoes) {
                     <p>${s.user_details?.cargo || "Sem cargo definido"}</p>
                 </div>
             </div>
+            ${(s.mensagem && String(s.mensagem).trim()) ? `<div class="solicitation-msg">${String(s.mensagem).trim()}</div>` : ''}
             <div class="solicitation-actions">
                 <button class="btn-primary" onclick="gerenciarSolicitacao(${s.id}, 'aprovada')">Aceitar</button>
                 <button class="btn-outline" onclick="gerenciarSolicitacao(${s.id}, 'recusada')">Recusar</button>
@@ -263,3 +288,4 @@ document.addEventListener('DOMContentLoaded', loadSolicitacoesPage);
 
 </body>
 </html>
+

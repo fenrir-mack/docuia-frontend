@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -44,16 +44,12 @@
 
             <div class="user-menu" id="userMenu">
 
-                <a href="/perfil">
-                    ♙ Meu Perfil
-                </a>
+                <a href="/perfil"><img src="{{ url_for('static', path='pngs/user.png') }}" alt="Meu Perfil">Meu Perfil</a>
 
 
                 <div class="menu-divider"></div>
 
-                <a href="/login" class="logout-link">
-                    ↪ Sair
-                </a>
+                <a href="/login" class="logout-link"><img src="{{ url_for('static', path='pngs/corner-down-right.png') }}" alt="Sair">Sair</a>
 
             </div>
 
@@ -68,7 +64,7 @@
                     <p id="sidebar-user-email">email@exemplo.com</p>
                 </div>
 
-                <span class="dropdown-arrow">⌄</span>
+                <span class="dropdown-arrow"><img src="{{ url_for('static', path='pngs/down-arrow.png') }}" alt="Abrir menu"></span>
 
             </button>
 
@@ -85,7 +81,7 @@
 
         <div class="project-header-section">
             <a href="/projetos" class="back-to-projects">
-                <span>←</span> Voltar para Projetos
+                <span>竊・/span> Voltar para Projetos
             </a>
             <div class="project-title-area">
                 <div class="project-icon-large">
@@ -229,6 +225,34 @@ async function loadProjectDetails() {
         });
         const project = await handleResponse(projResp);
         fetch(API_URLS.projetos + `/projetos/${projectId}/acessos`, { method: "POST", headers: authHeaders() }).catch(() => {});
+
+        // Guard: sem acesso ao projeto -> volta para empresa; se nem é membro da empresa -> dashboard
+        const myProjectsResp = await fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() });
+        const myProjects = await handleResponse(myProjectsResp);
+        const hasProjectAccess = myProjects.some(p => String(p.id) === String(projectId));
+        if (!hasProjectAccess) {
+            let isCompanyMember = false;
+            try {
+                const membersResp = await fetch(API_URLS.empresas + `/empresas/${project.empresa_id}/membros`, { headers: authHeaders() });
+                const members = await handleResponse(membersResp);
+                isCompanyMember = Array.isArray(members) && members.some(m => String(m.usuario_id) === String(user.id));
+            } catch {}
+
+            if (!isCompanyMember) {
+                try {
+                    const compResp = await fetch(API_URLS.empresas + `/empresas/${project.empresa_id}`, { headers: authHeaders() });
+                    const company = await handleResponse(compResp);
+                    isCompanyMember = String(company.dono_id) === String(user.id);
+                } catch {}
+            }
+
+            if (isCompanyMember) {
+                window.location.href = `/empresa?id=${project.empresa_id}`;
+            } else {
+                window.location.href = "/dashboard";
+            }
+            return;
+        }
         
         document.getElementById('project-name').innerText = project.nome + (project.status === 'arquivado' ? ' (Arquivado)' : '');
         document.getElementById('project-description').innerText = project.descricao || "Sem descrição disponível";
@@ -248,7 +272,30 @@ async function loadProjectDetails() {
         }
         applyProjectTabsTheme({ cor: accent });
 
-        // 4. Configurar eventos de clique para navegação dinâmica para o microsserviço de upload dos amigos
+        // Badge de solicitações pendentes (tab)
+        try {
+            const solResp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/solicitacoes", { headers: authHeaders() });
+            const solicitacoes = await handleResponse(solResp);
+            const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
+            const badge = document.getElementById('tab-badge-sol');
+            if (badge) {
+                if (pendentes > 0) {
+                    badge.innerText = pendentes;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                }
+            }
+        } catch (_) {
+            const badge = document.getElementById('tab-badge-sol');
+            if (badge) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
+
+        // 4. Configurar eventos de clique para navegação dinâmica para o microserviço de upload dos amigos
         const token = getToken();
         const amigosUrl = API_URLS.amigos || "http://localhost:5000";
 
@@ -271,3 +318,4 @@ function toggleUserMenu() {
 
 </body>
 </html>
+

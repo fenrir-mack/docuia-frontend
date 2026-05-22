@@ -34,12 +34,12 @@
 
         <div class="user-dropdown-area">
             <div class="user-menu" id="userMenu">
-                <a href="/perfil">♙ Meu Perfil</a>
+                <a href="/perfil"><img src="{{ url_for('static', path='pngs/user.png') }}" alt="Meu Perfil">Meu Perfil</a>
 
 
                 <div class="menu-divider"></div>
 
-                <a href="/login" class="logout-link">↪ Sair</a>
+                <a href="/login" class="logout-link"><img src="{{ url_for('static', path='pngs/corner-down-right.png') }}" alt="Sair">Sair</a>
             </div>
 
             <button class="user-box user-toggle" onclick="toggleUserMenu()">
@@ -50,7 +50,7 @@
                     <p id="sidebar-user-email">email@exemplo.com</p>
                 </div>
 
-                <span class="dropdown-arrow">⌄</span>
+                <span class="dropdown-arrow"><img src="{{ url_for('static', path='pngs/down-arrow.png') }}" alt="Abrir menu"></span>
             </button>
         </div>
     </div>
@@ -100,7 +100,7 @@
 
         <div class="members-header">
             <h2>Projetos da Empresa</h2>
-            <button class="btn-primary btn-sm" id="btn-novo-projeto">
+            <button class="btn-primary company-create-project-btn" id="btn-novo-projeto">
                 + Novo Projeto
             </button>
         </div>
@@ -204,6 +204,11 @@ async function loadCompanyDetails() {
         const compResp = await fetch(API_URLS.empresas + "/empresas/" + companyId, {
             headers: authHeaders()
         });
+        if (!compResp.ok) {
+            // Não é membro desta empresa (ou não tem acesso) -> volta ao dashboard
+            window.location.href = "/dashboard";
+            return;
+        }
         const company = await handleResponse(compResp);
         fetch(API_URLS.empresas + `/empresas/${companyId}/acessos`, { method: "POST", headers: authHeaders() }).catch(() => {});
         document.getElementById('company-name').innerText = company.nome;
@@ -215,6 +220,13 @@ async function loadCompanyDetails() {
             headers: authHeaders()
         });
         const members = await handleResponse(membersResp);
+
+        // Guard: se não é membro desta empresa -> dashboard
+        const isCompanyMember = (Array.isArray(members) && members.some(m => String(m.usuario_id) === String(user.id))) || String(company.dono_id) === String(user.id);
+        if (!isCompanyMember) {
+            window.location.href = "/dashboard";
+            return;
+        }
         document.getElementById('stats-members').innerText = members.length;
                 
         // 4. Projetos onde o usuário é membro
@@ -225,7 +237,7 @@ async function loadCompanyDetails() {
         // 5. Todos os Projetos da Empresa
         const allProjResp = await fetch(API_URLS.projetos + "/projetos/empresa/" + companyId, { headers: authHeaders() });
         const companyProjects = await handleResponse(allProjResp);
-        const activeProjects = companyProjects.filter(p => p.status !== 'arquivado');
+        const activeProjects = companyProjects.filter(p => p.status !== 'arquivado' && p.status !== 'excluido');
         
         activeProjects.forEach(p => {
             p.is_member = myProjectIds.includes(p.id);
@@ -250,7 +262,16 @@ async function loadCompanyDetails() {
         });
         const solicitacoes = await handleResponse(solResp);
         const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
-        if (pendentes > 0) { document.getElementById('tab-badge-sol').innerText = pendentes; document.getElementById('tab-badge-sol').style.display = 'flex'; }
+        const badge = document.getElementById('tab-badge-sol');
+        if (badge) {
+            if (pendentes > 0) {
+                badge.innerText = pendentes;
+                badge.style.display = 'flex';
+            } else {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+        }
 
     } catch (error) {
         console.error("Erro ao carregar detalhes:", error);
@@ -264,20 +285,76 @@ function renderProjects(projects, companyCor) {
         return;
     }
 
+    window.__companyProjectNamesById = window.__companyProjectNamesById || {};
+    projects.forEach(p => { window.__companyProjectNamesById[p.id] = p.nome; });
+
     list.innerHTML = projects.map(p => `
-        <div class="company-project-card" onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;">
+        <div class="company-project-card ${p.is_member ? '' : 'company-project-locked'}" ${p.is_member ? `onclick="window.location.href='/projeto?id=${p.id}'" style="cursor: pointer;"` : ''}>
             <div class="company-project-header">
                 <div class="project-icon company-project-icon ${resolveProjectColor(p.cor, companyCor)}">
                     <img src="/static/pngs/folder.png" alt="Projeto" style="width: 13px; height: 13px;">
                 </div>
                 <h4>${p.nome}</h4>
             </div>
+            <div class="company-project-desc">
+                ${p.descricao ? p.descricao : 'Sem descrição'}
+            </div>
             <p>
                 <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/users.png" style="width:11px; height:11px; "> ${p.membros_count === null || p.membros_count === undefined ? '?' : p.membros_count}</span>
                 <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/file.png" style="width:11px; height:11px; "> ? docs</span>
             </p>
+            ${p.is_member ? '' : `
+                <div class="company-project-actions">
+                    <button class="btn-outline btn-sm" onclick="event.stopPropagation(); openRequestAccessModal(${p.id})">
+                        Pedir para entrar
+                    </button>
+                </div>
+            `}
         </div>
     `).join('');
+}
+
+function openRequestAccessModal(projectId) {
+    const modal = document.getElementById('request-project-access-modal');
+    modal.classList.add('show');
+    modal.dataset.projectId = String(projectId);
+    const name = (window.__companyProjectNamesById && window.__companyProjectNamesById[projectId]) ? window.__companyProjectNamesById[projectId] : 'Projeto';
+    document.getElementById('request-access-project-name').innerText = name;
+    document.getElementById('request-access-message').value = '';
+}
+
+function closeRequestAccessModal() {
+    const modal = document.getElementById('request-project-access-modal');
+    modal.classList.remove('show');
+    delete modal.dataset.projectId;
+}
+
+async function submitRequestAccess() {
+    const modal = document.getElementById('request-project-access-modal');
+    const projectId = modal.dataset.projectId;
+    if (!projectId) return;
+
+    const mensagem = document.getElementById('request-access-message').value.trim();
+    const btn = document.querySelector('#request-project-access-modal .btn-acao');
+    try {
+        btn.innerText = "Enviando...";
+        btn.disabled = true;
+
+        const resp = await fetch(API_URLS.projetos + `/projetos/${projectId}/solicitacoes`, {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ mensagem })
+        });
+        await handleResponse(resp);
+        closeRequestAccessModal();
+        alert("Solicitação enviada!");
+        loadCompanyDetails();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = "Enviar Solicitação";
+        btn.disabled = false;
+    }
 }
 
 // Criar Novo Projeto via Modal
@@ -337,6 +414,9 @@ function toggleUserMenu() {
 <!-- MODAL CRIAR PROJETO -->
 <div id="create-project-modal" class="modal-overlay">
     <div class="modal-card">
+        <button class="modal-close-btn" onclick="closeProjectModal()" aria-label="Fechar">
+            <img src="{{ url_for('static', path='pngs/x.png') }}" alt="Fechar">
+        </button>
         <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Novo Projeto</h2>
         <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Crie um novo projeto nesta empresa.</p>
 
@@ -350,10 +430,27 @@ function toggleUserMenu() {
             <textarea id="create-projeto-desc" placeholder="Uma breve descrição sobre este projeto..." style="width: 100%; padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; resize: vertical; min-height: 64px; box-sizing: border-box;"></textarea>
         </div>
 
-        <div class="modal-footer-btns">
-            <button class="btn-cancel" onclick="closeProjectModal()">Cancelar</button>
-            <button class="btn-acao" onclick="submitCreateProject()">Criar Projeto</button>
+        <button class="btn-acao modal-primary-btn" onclick="submitCreateProject()">Criar Projeto</button>
+    </div>
+</div>
+
+<!-- MODAL SOLICITAR ACESSO AO PROJETO -->
+<div id="request-project-access-modal" class="modal-overlay">
+    <div class="modal-card">
+        <button class="modal-close-btn" onclick="closeRequestAccessModal()" aria-label="Fechar">
+            <img src="{{ url_for('static', path='pngs/x.png') }}" alt="Fechar">
+        </button>
+        <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Pedir para entrar</h2>
+        <p style="font-size: 12px; color: #475569; margin-bottom: 12px;">
+            Projeto: <strong id="request-access-project-name">Projeto</strong>
+        </p>
+
+        <div style="margin-bottom: 19px;">
+            <label style="display: block; font-size: 11px; font-weight: 600; color: #1e293b; margin-bottom: 5px;">Mensagem (opcional)</label>
+            <textarea id="request-access-message" placeholder="Ex: Gostaria de participar para contribuir com o projeto..." style="width: 100%; padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; resize: vertical; min-height: 64px; box-sizing: border-box;"></textarea>
         </div>
+
+        <button class="btn-acao modal-primary-btn" onclick="submitRequestAccess()">Enviar Solicitação</button>
     </div>
 </div>
 
