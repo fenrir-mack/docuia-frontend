@@ -125,7 +125,7 @@
                 <h3>Apresentações</h3>
                 <p>5 apresentações</p>
             </div>
-            <div class="module-card">
+            <div class="module-card" id="card-diagramas" style="cursor: pointer;">
                 <div class="module-icon orange">
                     <img src="{{ url_for('static', path='pngs/diagram.png') }}" alt="Diagramas">
                 </div>
@@ -303,6 +303,16 @@ async function loadProjectDetails() {
         document.getElementById('card-upload').addEventListener('click', () => {
             window.location.href = `${amigosUrl}/projeto/upload?id=${projectId}&token=${token}&companyId=${project.empresa_id}`;
         });
+
+        const diagramasUrl =
+            (API_URLS.diagramas || "https://docula-modulo5-front-gabriel-gcgmcjbeg2dze3bs.canadacentral-01.azurewebsites.net").replace(/\/+$/, "");
+
+        const cardDiagramas = document.getElementById('card-diagramas');
+        if (cardDiagramas) {
+            cardDiagramas.addEventListener('click', () => {
+                window.location.href = `${diagramasUrl}/?id=${projectId}&token=${token}&companyId=${project.empresa_id}`;
+            });
+        }
 
     } catch (error) {
         console.error("Erro ao carregar detalhes do projeto:", error);
