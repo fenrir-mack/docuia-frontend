@@ -54,12 +54,12 @@
     <section class="project-internal-content" style="padding: 19px;">
 
         <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 19px; text-decoration: none;">
-            <span style="margin-right: 6px; font-size: 14px;">←</span> Sair da Empresa
+            <span>←</span> Sair da Empresa
         </a>
 
         <div class="project-header-section">
             <div class="project-title-area">
-                <div class="project-icon-large" style="background: #8b5cf6;">
+                <div class="project-icon-large indigo">
                     <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
                 <div class="project-info-large">
@@ -108,6 +108,56 @@
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 const companyId = urlParams.get('id');
+const COMPANY_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
+
+function companyColorStorageKey(id) {
+    return `company_color_${id}`;
+}
+
+function normalizeCompanyColor(color) {
+    return COMPANY_COLOR_CLASSES.includes(color) ? color : 'indigo';
+}
+
+function applyCompanyTabsTheme(color) {
+    const tabs = document.getElementById('company-tabs');
+    if (!tabs) return;
+
+    const normalized = normalizeCompanyColor(color);
+    const themeColors = {
+        teal: '#14b8a6',
+        rose: '#f43f5e',
+        amber: '#f59e0b',
+        indigo: '#6366f1',
+        emerald: '#10b981',
+        cyan: '#06b6d4'
+    };
+
+    tabs.classList.remove('theme-teal', 'theme-rose', 'theme-amber', 'theme-indigo', 'theme-emerald', 'theme-cyan');
+    tabs.style.removeProperty('--project-accent');
+    tabs.classList.add(`theme-${normalized}`);
+    tabs.style.setProperty('--project-accent', themeColors[normalized] || themeColors.indigo);
+}
+
+function applyCompanyColor(color) {
+    const icon = document.querySelector('.project-icon-large');
+    if (!icon) return;
+    icon.classList.remove(...COMPANY_COLOR_CLASSES);
+    icon.classList.add(normalizeCompanyColor(color));
+    applyCompanyTabsTheme(color);
+}
+
+function applyCachedCompanyColor() {
+    const cachedColor = localStorage.getItem(companyColorStorageKey(companyId));
+    if (cachedColor) {
+        applyCompanyColor(cachedColor);
+    }
+}
+
+function persistCompanyColor(color) {
+    const normalized = normalizeCompanyColor(color);
+    localStorage.setItem(companyColorStorageKey(companyId), normalized);
+    applyCompanyColor(normalized);
+}
 
 if (!companyId) {
     alert("Empresa não especificada!");
@@ -121,6 +171,7 @@ async function loadMembersPage() {
         document.getElementById('tab-membros').href = `/empresa/membros?id=${companyId}`;
         document.getElementById('tab-solicitacoes').href = `/empresa/solicitacoes?id=${companyId}`;
         document.getElementById('tab-configuracoes').href = `/empresa/configuracoes?id=${companyId}`;
+        applyCachedCompanyColor();
 
         // 1. Perfil do Usuário (Sidebar)
         const user = await getUserProfile();
@@ -132,6 +183,7 @@ async function loadMembersPage() {
         const company = await handleResponse(compResp);
         document.getElementById('company-name').innerText = company.nome;
         document.getElementById('company-description').innerText = company.descricao || "Sem descrição disponível";
+        persistCompanyColor(company.cor);
 
         // 3. Membros
         const membersResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/membros", { headers: authHeaders() });

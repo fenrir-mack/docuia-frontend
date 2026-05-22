@@ -55,7 +55,7 @@
     <section class="project-internal-content" style="padding: 19px;">
 
         <div class="project-header-section">
-            <a href="/projetos" class="back-to-projects">← Voltar para Projetos</a>
+            <a href="/projetos" class="back-to-projects"><span style="margin-right: 6px;">←</span> Voltar para Projetos</a>
             <div class="project-title-area">
                 <div class="project-icon-large">
                     <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Folder" style="width:22px; height:22px; ">
@@ -90,6 +90,52 @@
 <div class="help-btn">?</div>
 
 <script>
+function applyProjectTabsTheme(project) {
+    const projectTabs = document.getElementById('project-tabs');
+    if (!projectTabs) return;
+
+    projectTabs.classList.remove('theme-teal', 'theme-rose', 'theme-amber', 'theme-indigo', 'theme-emerald', 'theme-cyan');
+    projectTabs.style.removeProperty('--project-accent');
+
+    const raw = (project && project.cor ? String(project.cor) : '').trim();
+    const themeColors = {
+        teal: '#14b8a6',
+        rose: '#f43f5e',
+        amber: '#f59e0b',
+        indigo: '#6366f1',
+        emerald: '#10b981',
+        cyan: '#06b6d4',
+        green: '#10b981',
+        blue: '#3154ff',
+        purple: '#7c3aed',
+        orange: '#f59e0b'
+    };
+
+    if (raw.startsWith('#')) {
+        projectTabs.style.setProperty('--project-accent', raw);
+        return;
+    }
+
+    const lower = raw.toLowerCase();
+    if (lower in themeColors) {
+        projectTabs.style.setProperty('--project-accent', themeColors[lower]);
+        if (['teal','rose','amber','indigo','emerald','cyan'].includes(lower)) {
+            projectTabs.classList.add(`theme-${lower}`);
+        }
+    }
+}
+
+function resolveAccentColor(project, company) {
+    const allowed = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
+    const projectCor = project && project.cor ? String(project.cor).trim() : '';
+    const companyCor = company && company.cor ? String(company.cor).trim() : '';
+
+    if (allowed.includes(projectCor) && projectCor !== 'teal') return projectCor;
+    if (allowed.includes(companyCor)) return companyCor;
+    if (allowed.includes(projectCor)) return projectCor;
+    return 'teal';
+}
+
 const urlParams = new URLSearchParams(window.location.search);
 const projectId = urlParams.get('id');
 
@@ -114,10 +160,7 @@ async function loadSolicitacoesPage() {
         // 2. Detalhes do Projeto (MS3)
         const projResp = await fetch(API_URLS.projetos + "/projetos/" + projectId, { headers: authHeaders() });
         const project = await handleResponse(projResp);
-        const projectIcon = document.querySelector('.project-icon-large');
-        if (projectIcon) {
-            projectIcon.classList.add(project.cor || 'teal');
-        }
+        fetch(API_URLS.projetos + `/projetos/${projectId}/acessos`, { method: "POST", headers: authHeaders() }).catch(() => {});
         document.getElementById('project-name').innerText = project.nome;
         document.getElementById('project-description').innerText = project.descricao || "Sem descrição";
 
@@ -125,6 +168,14 @@ async function loadSolicitacoesPage() {
         const compResp = await fetch(API_URLS.empresas + "/empresas/" + project.empresa_id, { headers: authHeaders() });
         const company = await handleResponse(compResp);
         document.getElementById('project-enterprise').innerText = "Empresa: " + company.nome;
+
+        const accent = resolveAccentColor(project, company);
+        const projectIcon = document.querySelector('.project-icon-large');
+        if (projectIcon) {
+            projectIcon.classList.remove('teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan');
+            projectIcon.classList.add(accent);
+        }
+        applyProjectTabsTheme({ cor: accent });
 
         // 4. Solicitações do Projeto
         const solResp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/solicitacoes", { headers: authHeaders() });

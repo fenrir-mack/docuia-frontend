@@ -98,7 +98,25 @@ async function loadCompanies() {
         // 2. Carregar Empresas
         const resp = await fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() });
         const companies = await handleResponse(resp);
-        renderCompanies(companies);
+
+        // 3. Enriquecer cards com contagens reais
+        const enriched = await Promise.all(
+            companies.map(async (c) => {
+                try {
+                    const [membersResp, projectsResp] = await Promise.all([
+                        fetch(API_URLS.empresas + `/empresas/${c.id}/membros`, { headers: authHeaders() }),
+                        fetch(API_URLS.projetos + `/projetos/empresa/${c.id}`, { headers: authHeaders() }),
+                    ]);
+                    const members = await handleResponse(membersResp);
+                    const projects = await handleResponse(projectsResp);
+                    return { ...c, membros_count: members.length, projetos_count: projects.length };
+                } catch (_) {
+                    return { ...c, membros_count: null, projetos_count: null };
+                }
+            })
+        );
+
+        renderCompanies(enriched);
 
     } catch (error) {
         console.error("Erro ao carregar empresas:", error);
@@ -117,7 +135,9 @@ function renderCompanies(companies) {
     grid.innerHTML = companies.map((c, index) => `
         <article class="company-card" onclick="window.location.href='/empresa?id=${c.id}'" style="cursor: pointer;">
             <div class="company-card-top">
-                <div class="company-big-icon ${c.cor || 'indigo'}">▤</div>
+                <div class="company-big-icon ${c.cor || 'indigo'}">
+                    <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
+                </div>
                 <span class="dots">⋮</span>
             </div>
             <h2>${c.nome}</h2>
@@ -125,8 +145,8 @@ function renderCompanies(companies) {
                 ${c.dono_id === parseInt(localStorage.getItem('user_id')) ? '<span class="badge owner">♕ Proprietário</span>' : '<span class="badge">Membro</span>'}
             </div>
             <div class="company-card-footer">
-                <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Membros</span>
-                <span><img src="/static/pngs/folder.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Projetos</span>
+                <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Membros ${c.membros_count === null ? '' : `<strong style="margin-left:4px;">${c.membros_count}</strong>`}</span>
+                <span><img src="/static/pngs/folder.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Projetos ${c.projetos_count === null ? '' : `<strong style="margin-left:4px;">${c.projetos_count}</strong>`}</span>
             </div>
         </article>
     `).join('');

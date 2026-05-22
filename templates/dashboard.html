@@ -283,22 +283,41 @@ async function loadDashboardData() {
         document.getElementById('sidebar-user-email').innerText = userData.email;
         document.getElementById('welcome-user-name').innerText = userData.nome;
 
-        // 2. Carregar Empresas (MS2)
-        const companiesResponse = await fetch(API_URLS.empresas + "/empresas", {
-            headers: authHeaders()
-        });
+        const DASHBOARD_LIMIT = 6;
+
+        // 2. Carregar Empresas (MS2) + ordenar por mais recente acessada
+        const [companiesResponse, recentCompaniesResponse] = await Promise.all([
+            fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() }),
+            fetch(API_URLS.empresas + `/empresas/recentes?limit=${DASHBOARD_LIMIT}`, { headers: authHeaders() }).catch(() => null),
+        ]);
         const companies = await handleResponse(companiesResponse);
+        const recentCompanies = (recentCompaniesResponse && recentCompaniesResponse.ok)
+            ? await handleResponse(recentCompaniesResponse)
+            : [];
+
         companiesById.clear();
         companies.forEach(c => companiesById.set(c.id, c));
-        renderCompanies(companies);
 
-        // 3. Carregar Projetos (MS3)
-        const projectsResponse = await fetch(API_URLS.projetos + "/projetos", {
-            headers: authHeaders()
-        });
+        const companiesSorted = (recentCompanies.length > 0)
+            ? recentCompanies
+            : companies;
+        renderCompanies(companiesSorted.slice(0, DASHBOARD_LIMIT));
+
+        // 3. Carregar Projetos (MS3) + ordenar por mais recente acessado
+        const [projectsResponse, recentProjectsResponse] = await Promise.all([
+            fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() }),
+            fetch(API_URLS.projetos + `/projetos/recentes?limit=${DASHBOARD_LIMIT}`, { headers: authHeaders() }).catch(() => null),
+        ]);
         const projects = await handleResponse(projectsResponse);
         const activeProjects = projects.filter(p => p.status !== 'arquivado');
-        renderProjects(activeProjects);
+        const recentProjects = (recentProjectsResponse && recentProjectsResponse.ok)
+            ? await handleResponse(recentProjectsResponse)
+            : [];
+
+        const projectsSorted = (recentProjects.length > 0)
+            ? recentProjects.filter(p => p.status !== 'arquivado')
+            : activeProjects;
+        renderProjects(projectsSorted.slice(0, DASHBOARD_LIMIT));
         document.getElementById('stats-projects-count').innerText = activeProjects.length;
 
     } catch (error) {

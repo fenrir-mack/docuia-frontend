@@ -60,8 +60,8 @@
 
     <section class="project-internal-content" style="padding: 19px;">
 
-        <a href="/empresas" class="back-link" style="display: inline-flex; align-items: center; color: #64748b; font-weight: 500; margin-bottom: 19px; text-decoration: none;">
-            <span style="margin-right: 6px; font-size: 14px;">←</span> Sair da Empresa
+        <a href="/empresas" class="back-link">
+            <span>←</span> Sair da Empresa
         </a>
 
         <div class="project-header-section">
@@ -132,6 +132,55 @@ function resolveProjectColor(projectCor, companyCor) {
 const urlParams = new URLSearchParams(window.location.search);
 const companyId = urlParams.get('id');
 
+function companyColorStorageKey(id) {
+    return `company_color_${id}`;
+}
+
+function normalizeCompanyColor(color) {
+    return PROJECT_COLOR_CLASSES.includes(color) ? color : 'indigo';
+}
+
+function applyCompanyTabsTheme(color) {
+    const tabs = document.getElementById('company-tabs');
+    if (!tabs) return;
+
+    const normalized = normalizeCompanyColor(color);
+    const themeColors = {
+        teal: '#14b8a6',
+        rose: '#f43f5e',
+        amber: '#f59e0b',
+        indigo: '#6366f1',
+        emerald: '#10b981',
+        cyan: '#06b6d4'
+    };
+
+    tabs.classList.remove('theme-teal', 'theme-rose', 'theme-amber', 'theme-indigo', 'theme-emerald', 'theme-cyan');
+    tabs.style.removeProperty('--project-accent');
+    tabs.classList.add(`theme-${normalized}`);
+    tabs.style.setProperty('--project-accent', themeColors[normalized] || themeColors.indigo);
+}
+
+function applyCompanyColor(color) {
+    const companyIcon = document.querySelector('.project-icon-large');
+    if (!companyIcon) return;
+    companyIcon.classList.remove(...PROJECT_COLOR_CLASSES);
+    companyIcon.classList.add(normalizeCompanyColor(color));
+    applyCompanyTabsTheme(color);
+}
+
+function applyCachedCompanyColor() {
+    const cachedColor = localStorage.getItem(companyColorStorageKey(companyId));
+    if (cachedColor) {
+        applyCompanyColor(cachedColor);
+    }
+}
+
+function persistCompanyColor(color) {
+    const normalized = normalizeCompanyColor(color);
+    localStorage.setItem(companyColorStorageKey(companyId), normalized);
+    applyCompanyColor(normalized);
+}
+
 if (!companyId) {
     alert("Empresa não especificada!");
     window.location.href = "/empresas";
@@ -144,6 +193,7 @@ async function loadCompanyDetails() {
         document.getElementById('tab-membros').href = `/empresa/membros?id=${companyId}`;
         document.getElementById('tab-solicitacoes').href = `/empresa/solicitacoes?id=${companyId}`;
         document.getElementById('tab-configuracoes').href = `/empresa/configuracoes?id=${companyId}`;
+        applyCachedCompanyColor();
 
         // 1. Perfil do Usuário
         const user = await getUserProfile();
@@ -155,13 +205,10 @@ async function loadCompanyDetails() {
             headers: authHeaders()
         });
         const company = await handleResponse(compResp);
+        fetch(API_URLS.empresas + `/empresas/${companyId}/acessos`, { method: "POST", headers: authHeaders() }).catch(() => {});
         document.getElementById('company-name').innerText = company.nome;
         document.getElementById('company-description').innerText = company.descricao || "Sem descrição disponível";
-        const companyIcon = document.querySelector('.project-icon-large');
-        if (companyIcon) {
-            companyIcon.classList.remove('teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan');
-            companyIcon.classList.add(resolveProjectColor(null, company.cor));
-        }
+        persistCompanyColor(company.cor);
 
         // 3. Membros da Empresa (MS2)
         const membersResp = await fetch(API_URLS.empresas + "/empresas/" + companyId + "/membros", {
@@ -184,7 +231,17 @@ async function loadCompanyDetails() {
             p.is_member = myProjectIds.includes(p.id);
         });
 
-        renderProjects(activeProjects, company.cor);
+        const projectsWithCounts = await Promise.all(activeProjects.map(async (p) => {
+            try {
+                const membersResp = await fetch(API_URLS.projetos + `/projetos/${p.id}/membros`, { headers: authHeaders() });
+                const members = await handleResponse(membersResp);
+                return { ...p, membros_count: members.length };
+            } catch (_) {
+                return { ...p, membros_count: null };
+            }
+        }));
+
+        renderProjects(projectsWithCounts, company.cor);
         document.getElementById('stats-projects').innerText = activeProjects.length;
 
         // 5. Solicitações pendentes (badge na tab)
@@ -216,7 +273,7 @@ function renderProjects(projects, companyCor) {
                 <h4>${p.nome}</h4>
             </div>
             <p>
-                <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/users.png" style="width:11px; height:11px; "> ?</span>
+                <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/users.png" style="width:11px; height:11px; "> ${p.membros_count === null || p.membros_count === undefined ? '?' : p.membros_count}</span>
                 <span style="display: flex; align-items: center; gap: 3px;"><img src="/static/pngs/file.png" style="width:11px; height:11px; "> ? docs</span>
             </p>
         </div>
