@@ -23,8 +23,12 @@ async def api_config_js():
     auth_url = os.getenv("AUTH_API_URL", "http://localhost:8001")
     empresas_url = os.getenv("EMPRESAS_API_URL", "http://localhost:8002")
     projetos_url = os.getenv("PROJETOS_API_URL", "http://localhost:8003")
-    Upload_url = os.getenv("UPLOAD_FRONTEND_URL", "http://localhost:5000")
-    Diagramas_url = os.getenv("Diagramas_FRONTEND_URL", "http://localhost:5000")
+    upload_url = os.getenv("UPLOAD_FRONTEND_URL", "http://localhost:5000")
+    diagramas_url = (
+        os.getenv("Diagramas_FRONTEND_URL")
+        or os.getenv("DIAGRAMAS_FRONTEND_URL")
+        or "http://localhost:5000"
+    )
 
 
     js_content = f"""
@@ -32,7 +36,7 @@ async def api_config_js():
         auth: "{auth_url}",
         empresas: "{empresas_url}",
         projetos: "{projetos_url}",
-        amigos: "{amigos_url}",
+        upload: "{upload_url}",
         diagramas: "{diagramas_url}"
     }};
     """

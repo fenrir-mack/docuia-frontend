@@ -298,14 +298,14 @@ async function loadProjectDetails() {
 
         // 4. Configurar eventos de clique para navegação dinâmica para o microserviço de upload dos amigos
         const token = getToken();
-        const amigosUrl = API_URLS.amigos || "http://localhost:5000";
+        const uploadUrl = (API_URLS.upload || "http://localhost:5000").replace(/\/+$/, "");
 
         document.getElementById('card-upload').addEventListener('click', () => {
-            window.location.href = `${amigosUrl}/projeto/upload?id=${projectId}&token=${token}&companyId=${project.empresa_id}`;
+            window.location.href = `${uploadUrl}/projeto/upload?id=${projectId}&token=${token}&companyId=${project.empresa_id}`;
         });
 
         const diagramasUrl =
-            (API_URLS.diagramas || "https://docula-modulo5-front-gabriel-gcgmcjbeg2dze3bs.canadacentral-01.azurewebsites.net").replace(/\/+$/, "");
+            (API_URLS.diagramas || "http://localhost:5000").replace(/\/+$/, "");
 
         const cardDiagramas = document.getElementById('card-diagramas');
         if (cardDiagramas) {
