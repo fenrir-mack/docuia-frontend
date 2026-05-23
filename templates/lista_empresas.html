@@ -74,7 +74,7 @@
 
         <div class="company-search">
             <img src="{{ url_for('static', path='pngs/search.png') }}" alt="Buscar">
-            <input type="text" placeholder="Buscar empresas...">
+            <input type="text" id="company-search-input" placeholder="Buscar empresas...">
         </div>
 
         <section class="companies-grid" id="companies-grid">
@@ -89,6 +89,8 @@
 <div class="help-btn">?</div>
 
 <script>
+let allCompanies = [];
+
 async function loadCompanies() {
     try {
         // 1. Carregar Perfil (Sidebar)
@@ -122,17 +124,35 @@ async function loadCompanies() {
             })
         );
 
-        renderCompanies(enriched);
+        allCompanies = enriched;
+        applyCompanySearch();
 
     } catch (error) {
         console.error("Erro ao carregar empresas:", error);
     }
 }
 
+function applyCompanySearch() {
+    const input = document.getElementById('company-search-input');
+    const term = (input?.value || '').trim().toLowerCase();
+    const filtered = !term
+        ? allCompanies
+        : allCompanies.filter((c) => {
+            const haystack = `${c.nome || ''} ${c.descricao || ''}`.toLowerCase();
+            return haystack.includes(term);
+        });
+
+    renderCompanies(filtered);
+}
+
 function renderCompanies(companies) {
     const grid = document.getElementById('companies-grid');
     if (companies.length === 0) {
-        grid.innerHTML = '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não participa de nenhuma empresa.</p>';
+        const input = document.getElementById('company-search-input');
+        const term = (input?.value || '').trim();
+        grid.innerHTML = term
+            ? '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Nenhuma empresa encontrada.</p>'
+            : '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não participa de nenhuma empresa.</p>';
         return;
     }
 
@@ -263,7 +283,10 @@ async function submitJoinCompany() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadCompanies);
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('company-search-input')?.addEventListener('input', applyCompanySearch);
+    loadCompanies();
+});
 
 // Toggle menu logic
 function toggleUserMenu() {
