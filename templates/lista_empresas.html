@@ -90,6 +90,11 @@
 
 <script>
 let allCompanies = [];
+const pinnedCompanyIds = new Set(JSON.parse(localStorage.getItem('pinnedCompanyIds') || '[]'));
+
+function savePinnedCompanies() {
+    localStorage.setItem('pinnedCompanyIds', JSON.stringify([...pinnedCompanyIds]));
+}
 
 async function loadCompanies() {
     try {
@@ -124,12 +129,21 @@ async function loadCompanies() {
             })
         );
 
-        allCompanies = enriched;
+        allCompanies = sortCompanies(enriched);
         applyCompanySearch();
 
     } catch (error) {
         console.error("Erro ao carregar empresas:", error);
     }
+}
+
+function sortCompanies(companies) {
+    return [...companies].sort((a, b) => {
+        const aPinned = pinnedCompanyIds.has(Number(a.id));
+        const bPinned = pinnedCompanyIds.has(Number(b.id));
+        if (aPinned !== bPinned) return aPinned ? -1 : 1;
+        return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+    });
 }
 
 function applyCompanySearch() {
@@ -142,7 +156,7 @@ function applyCompanySearch() {
             return haystack.includes(term);
         });
 
-    renderCompanies(filtered);
+    renderCompanies(sortCompanies(filtered));
 }
 
 function renderCompanies(companies) {
@@ -163,6 +177,10 @@ function renderCompanies(companies) {
         if (r === 'admin') return '<span class="badge admin">Admin</span>';
         return '<span class="badge">Membro</span>';
     };
+
+    const pinnedBadgeHtml = (id) => {
+        return pinnedCompanyIds.has(Number(id)) ? '<span class="badge pinned">Fixada</span>' : '';
+    };
     
 
     grid.innerHTML = companies.map((c, index) => `
@@ -171,11 +189,20 @@ function renderCompanies(companies) {
                 <div class="company-big-icon ${c.cor || 'indigo'}">
                     <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
-                <span class="dots" aria-label="Mais opções"><img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;"></span>
+                <div class="company-actions" onclick="event.stopPropagation()">
+                    <button type="button" class="dots" aria-label="Mais opções" onclick="toggleCompanyMenu(event, ${c.id})">
+                        <img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;">
+                    </button>
+                    <div class="company-action-menu" id="company-menu-${c.id}">
+                        <button type="button" onclick="togglePinnedCompany(${c.id})">${pinnedCompanyIds.has(Number(c.id)) ? 'Desfixar' : 'Fixar'}</button>
+                        <button type="button" class="danger" onclick="deleteCompany(${c.id})">Apagar</button>
+                    </div>
+                </div>
             </div>
             <h2>${c.nome}</h2>
             <div class="badges">
                 ${roleBadgeHtml(c.my_role)}
+                ${pinnedBadgeHtml(c.id)}
             </div>
             <div class="company-card-footer">
                 <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Membros ${c.membros_count === null ? '' : `<strong style="margin-left:4px;">${c.membros_count}</strong>`}</span>
@@ -183,6 +210,54 @@ function renderCompanies(companies) {
             </div>
         </article>
     `).join('');
+}
+
+function closeCompanyMenus() {
+    document.querySelectorAll('.company-action-menu.show').forEach((menu) => {
+        menu.classList.remove('show');
+    });
+}
+
+function toggleCompanyMenu(event, companyId) {
+    event.stopPropagation();
+    const menu = document.getElementById(`company-menu-${companyId}`);
+    const shouldOpen = !menu.classList.contains('show');
+    closeCompanyMenus();
+    if (shouldOpen) menu.classList.add('show');
+}
+
+function togglePinnedCompany(companyId) {
+    const id = Number(companyId);
+    if (pinnedCompanyIds.has(id)) {
+        pinnedCompanyIds.delete(id);
+    } else {
+        pinnedCompanyIds.add(id);
+    }
+    savePinnedCompanies();
+    closeCompanyMenus();
+    allCompanies = sortCompanies(allCompanies);
+    applyCompanySearch();
+}
+
+async function deleteCompany(companyId) {
+    closeCompanyMenus();
+    const company = allCompanies.find((c) => Number(c.id) === Number(companyId));
+    const name = company?.nome ? ` "${company.nome}"` : '';
+    if (!confirm(`Você tem certeza que deseja apagar a empresa${name}?`)) return;
+
+    try {
+        const resp = await fetch(API_URLS.empresas + `/empresas/${companyId}`, {
+            method: "DELETE",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        pinnedCompanyIds.delete(Number(companyId));
+        savePinnedCompanies();
+        allCompanies = allCompanies.filter((c) => Number(c.id) !== Number(companyId));
+        applyCompanySearch();
+    } catch (error) {
+        alert(error.message);
+    }
 }
 
 // Abrir Modal de Opﾃｧﾃｵes de Empresa
@@ -294,6 +369,10 @@ function toggleUserMenu() {
     menu.classList.toggle("show");
 }
 window.addEventListener("click", function(e) {
+    if (!e.target.closest('.company-actions')) {
+        closeCompanyMenus();
+    }
+
     const menu = document.getElementById("userMenu");
     const button = document.querySelector(".user-toggle");
     if (menu && !menu.contains(e.target) && button && !button.contains(e.target)) {
