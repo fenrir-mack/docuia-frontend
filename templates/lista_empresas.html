@@ -196,7 +196,7 @@ function renderCompanies(companies) {
                     <div class="company-action-menu" id="company-menu-${c.id}">
                         <button type="button" onclick="togglePinnedCompany(${c.id})">${pinnedCompanyIds.has(Number(c.id)) ? 'Desfixar' : 'Fixar'}</button>
                         <button type="button" onclick="openCompanySettings(${c.id})">Configurações</button>
-                        <button type="button" onclick="copyCompanyId(${c.id})">Copiar ID</button>
+                        <button type="button" onclick="copyInviteCode(${c.id})">Copiar código de convite</button>
                     </div>
                 </div>
             </div>
@@ -245,19 +245,20 @@ function openCompanySettings(companyId) {
     window.location.href = `/empresa/configuracoes?id=${companyId}`;
 }
 
-async function copyCompanyId(companyId) {
+async function copyInviteCode(companyId) {
     closeCompanyMenus();
+    const inviteCode = `DOCUIA-E${companyId}`;
     try {
-        await navigator.clipboard.writeText(String(companyId));
-        alert("ID da empresa copiado.");
+        await navigator.clipboard.writeText(inviteCode);
+        alert("Código de convite copiado.");
     } catch (error) {
         const temp = document.createElement('input');
-        temp.value = String(companyId);
+        temp.value = inviteCode;
         document.body.appendChild(temp);
         temp.select();
         document.execCommand('copy');
         temp.remove();
-        alert("ID da empresa copiado.");
+        alert("Código de convite copiado.");
     }
 }
 
