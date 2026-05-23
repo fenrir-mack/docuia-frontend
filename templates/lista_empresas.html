@@ -195,7 +195,8 @@ function renderCompanies(companies) {
                     </button>
                     <div class="company-action-menu" id="company-menu-${c.id}">
                         <button type="button" onclick="togglePinnedCompany(${c.id})">${pinnedCompanyIds.has(Number(c.id)) ? 'Desfixar' : 'Fixar'}</button>
-                        <button type="button" class="danger" onclick="deleteCompany(${c.id})">Apagar</button>
+                        <button type="button" onclick="openCompanySettings(${c.id})">Configurações</button>
+                        <button type="button" onclick="copyCompanyId(${c.id})">Copiar ID</button>
                     </div>
                 </div>
             </div>
@@ -239,24 +240,24 @@ function togglePinnedCompany(companyId) {
     applyCompanySearch();
 }
 
-async function deleteCompany(companyId) {
+function openCompanySettings(companyId) {
     closeCompanyMenus();
-    const company = allCompanies.find((c) => Number(c.id) === Number(companyId));
-    const name = company?.nome ? ` "${company.nome}"` : '';
-    if (!confirm(`Você tem certeza que deseja apagar a empresa${name}?`)) return;
+    window.location.href = `/empresa/configuracoes?id=${companyId}`;
+}
 
+async function copyCompanyId(companyId) {
+    closeCompanyMenus();
     try {
-        const resp = await fetch(API_URLS.empresas + `/empresas/${companyId}`, {
-            method: "DELETE",
-            headers: authHeaders()
-        });
-        await handleResponse(resp);
-        pinnedCompanyIds.delete(Number(companyId));
-        savePinnedCompanies();
-        allCompanies = allCompanies.filter((c) => Number(c.id) !== Number(companyId));
-        applyCompanySearch();
+        await navigator.clipboard.writeText(String(companyId));
+        alert("ID da empresa copiado.");
     } catch (error) {
-        alert(error.message);
+        const temp = document.createElement('input');
+        temp.value = String(companyId);
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        temp.remove();
+        alert("ID da empresa copiado.");
     }
 }
 
