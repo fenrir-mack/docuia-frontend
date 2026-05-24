@@ -24,11 +24,7 @@ async def api_config_js():
     empresas_url = os.getenv("EMPRESAS_API_URL", "http://localhost:8002")
     projetos_url = os.getenv("PROJETOS_API_URL", "http://localhost:8003")
     upload_url = os.getenv("UPLOAD_FRONTEND_URL", "http://localhost:5000")
-    diagramas_url = (
-        os.getenv("Diagramas_FRONTEND_URL")
-        or os.getenv("DIAGRAMAS_FRONTEND_URL")
-        or "http://localhost:5000"
-    )
+    diagramas_url = os.getenv("DIAGRAMAS_FRONTEND_URL", "http://localhost:5000")
 
 
     js_content = f"""
