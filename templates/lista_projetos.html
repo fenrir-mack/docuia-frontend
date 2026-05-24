@@ -143,7 +143,6 @@
 <script>
 const PROJECT_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
 const companiesById = new Map();
-const memberCountByProjectId = new Map();
 
 function resolveProjectColor(project) {
     if (PROJECT_COLOR_CLASSES.includes(project.cor)) {
@@ -190,20 +189,6 @@ async function loadProjects() {
 
         document.getElementById('header-subtitle').innerText = `${activeProjects.length} projeto(s) ativo(s)`;
 
-        // Contagem de membros por projeto (MS3)
-        memberCountByProjectId.clear();
-        await Promise.all(
-            activeProjects.map(async (p) => {
-                try {
-                    const r = await fetch(API_URLS.projetos + `/projetos/${p.id}/membros`, { headers: authHeaders() });
-                    const members = await handleResponse(r);
-                    memberCountByProjectId.set(p.id, Array.isArray(members) ? members.length : 0);
-                } catch {
-                    memberCountByProjectId.set(p.id, 0);
-                }
-            })
-        );
-
         renderProjects(activeProjects);
 
         // 3. Carregar Empresas para o Select
@@ -246,62 +231,8 @@ function renderProjects(projects) {
                 <span class="project-dots" aria-label="Mais opções"><img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;"></span>
             </div>
             <p class="project-description">${p.descricao || 'Sem descrição'}</p>
-            <div class="project-footer">
-                <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> ${memberCountByProjectId.get(p.id) ?? 0}</span>
-                <span><img src="/static/pngs/file.png" style="width:11px; height:11px; vertical-align:text-bottom; "> 0</span>
-                <span><img src="/static/pngs/presentation.png" style="width:11px; height:11px; vertical-align:text-bottom; "> 0</span>
-                <span><img src="/static/pngs/diagram.png" style="width:11px; height:11px; vertical-align:text-bottom; "> 0</span>
-            </div>
         </article>
     `).join('');
-
-    try {
-        const updateSpanAfterImg = (span, value) => {
-            if (!span) return;
-            const img = span.querySelector('img');
-            if (!img) return;
-            span.textContent = '';
-            span.appendChild(img);
-            span.append(` ${value}`);
-        };
-
-        const createCountSpan = (imgSrc, value) => {
-            const span = document.createElement('span');
-            const img = document.createElement('img');
-            img.src = imgSrc;
-            img.style.width = '11px';
-            img.style.height = '11px';
-            img.style.verticalAlign = 'text-bottom';
-            span.appendChild(img);
-            span.append(` ${value}`);
-            return span;
-        };
-
-        grid.querySelectorAll('.project-card').forEach((card) => {
-            const projectId = parseInt(card.dataset.projectId || '', 10);
-            const membersCount = memberCountByProjectId.get(projectId) ?? 0;
-
-            const footerSpans = card.querySelectorAll('.project-footer > span');
-            if (footerSpans.length >= 2) {
-                updateSpanAfterImg(footerSpans[0], membersCount);
-                updateSpanAfterImg(footerSpans[1], 0);
-
-                const footer = card.querySelector('.project-footer');
-                if (footer) {
-                    const hasPresentation = !!footer.querySelector('img[src="/static/pngs/presentation.png"]');
-                    const hasDiagram = !!footer.querySelector('img[src="/static/pngs/diagram.png"]');
-                    const insertBefore = null;
-
-                    if (!hasPresentation) {
-                        footer.insertBefore(createCountSpan('/static/pngs/presentation.png', 0), insertBefore);
-                    }
-                    if (!hasDiagram) {
-                        footer.insertBefore(createCountSpan('/static/pngs/diagram.png', 0), insertBefore);
-                    }
-                }
-            }
-        });
-    } catch {}
 }
 
 // Abrir Modal de Criar Projeto
