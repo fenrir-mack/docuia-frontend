@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -81,7 +81,6 @@
 
 </aside>
 
-<!-- CONTEÚDO -->
 <main class="dashboard-main">
 
     <section class="dashboard-content">
@@ -90,65 +89,7 @@
         <header class="dash-header">
             <h1>Olá, <span id="welcome-user-name">Usuário</span>!</h1>
         </header>
-
-        <!-- CARDS -->
-        <section class="stats-grid">
-
-            <div class="stat-card">
-
-                <div class="stat-top">
-                    <div class="stat-icon blue">
-                        <img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Projetos" style="width:19px; height:19px; ">
-                    </div>
-                </div>
-
-                <h2 id="stats-projects-count">0</h2>
-                <p>Projetos Ativos</p>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-top">
-                    <div class="stat-icon green">
-                        <img src="{{ url_for('static', path='pngs/file.png') }}" alt="Documentos" style="width:19px; height:19px; ">
-                    </div>
-                </div>
-
-                <h2 style="font-size: 13px; color: #64748b; margin-top: 11px;">Em breve</h2>
-                <p>Documentos Gerados</p>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-top">
-                    <div class="stat-icon purple">
-                        <img src="{{ url_for('static', path='pngs/presentation.png') }}" alt="Apresentações" style="width:19px; height:19px; ">
-                    </div>
-                </div>
-
-                <h2 style="font-size: 13px; color: #64748b; margin-top: 11px;">Em breve</h2>
-                <p>Apresentações</p>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-top">
-                    <div class="stat-icon orange">
-                        <img src="{{ url_for('static', path='pngs/diagram.png') }}" alt="Diagramas" style="width:19px; height:19px; ">
-                    </div>
-                </div>
-
-                <h2 style="font-size: 13px; color: #64748b; margin-top: 11px;">Em breve</h2>
-                <p>Diagramas</p>
-
-            </div>
-
-        </section>
-
-        <!-- PAINÉIS -->
+        <!-- PAINﾃ迂S -->
         <section class="dash-panels">
 
             <!-- PROJETOS -->
@@ -188,9 +129,29 @@
                 </div>
 
             </div>
-
         </section>
 
+        <section class="dash-panels" style="margin-top: 19px;">
+            <div class="panel">
+                <div class="panel-title">
+                    <h2><img src="{{ url_for('static', path='pngs/folder.png') }}" alt="Arquivados" style="width:16px; height:16px; vertical-align:text-bottom;"> Projetos Arquivados</h2>
+                    <a href="/projetos">Ver todos ›</a>
+                </div>
+                <div id="archived-projects-container">
+                    <p style="padding: 16px; color: #666;">Carregando projetos arquivados...</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <h2><img src="{{ url_for('static', path='pngs/clock.png') }}" alt="Solicitacoes" style="width:16px; height:16px; vertical-align:text-bottom;"> Solicitacoes</h2>
+                    <a href="/projetos">Ver todos ›</a>
+                </div>
+                <div id="project-requests-container">
+                    <p style="padding: 16px; color: #666;">Carregando solicitações...</p>
+                </div>
+            </div>
+        </section>
     </section>
 
 </main>
@@ -275,12 +236,12 @@ async function loadDashboardData() {
     try {
         // 1. Carregar Perfil do Usuário (MS1)
         const userData = await getUserProfile();
-        
+
         document.getElementById('sidebar-user-name').innerText = userData.nome;
         document.getElementById('sidebar-user-email').innerText = userData.email;
         document.getElementById('welcome-user-name').innerText = userData.nome;
 
-        const DASHBOARD_LIMIT = 6;
+        const DASHBOARD_LIMIT = 3;
 
         // 2. Carregar Empresas (MS2) + ordenar por mais recente acessada
         const [companiesResponse, recentCompaniesResponse] = await Promise.all([
@@ -306,16 +267,73 @@ async function loadDashboardData() {
             fetch(API_URLS.projetos + `/projetos/recentes?limit=${DASHBOARD_LIMIT}`, { headers: authHeaders() }).catch(() => null),
         ]);
         const projects = await handleResponse(projectsResponse);
-        const activeProjects = projects.filter(p => p.status !== 'arquivado');
+        const activeProjects = projects.filter(p => p.status !== 'arquivado' && p.status !== 'excluido');
+        const archivedProjects = projects.filter(p => p.status === 'arquivado');
         const recentProjects = (recentProjectsResponse && recentProjectsResponse.ok)
             ? await handleResponse(recentProjectsResponse)
             : [];
 
         const projectsSorted = (recentProjects.length > 0)
-            ? recentProjects.filter(p => p.status !== 'arquivado')
+            ? recentProjects.filter(p => p.status !== 'arquivado' && p.status !== 'excluido')
             : activeProjects;
         renderProjects(projectsSorted.slice(0, DASHBOARD_LIMIT));
-        document.getElementById('stats-projects-count').innerText = activeProjects.length;
+        renderArchivedProjects(archivedProjects.slice(0, DASHBOARD_LIMIT));
+
+        const pendingRequests = [];
+
+        // Solicitações de PROJETO: só para owner/admin do projeto
+        await Promise.all(
+            activeProjects.map(async (p) => {
+                try {
+                    const membersResp = await fetch(API_URLS.projetos + '/projetos/' + p.id + '/membros', { headers: authHeaders() });
+                    const members = await handleResponse(membersResp);
+                    const me = (Array.isArray(members) ? members : []).find(m => String(m.usuario_id) === String(userData.id));
+                    const role = String(me?.role || '').toLowerCase();
+                    if (!['owner', 'admin'].includes(role)) return;
+
+                    const resp = await fetch(API_URLS.projetos + '/projetos/' + p.id + '/solicitacoes', { headers: authHeaders() });
+                    const solicitacoes = await handleResponse(resp);
+                    (Array.isArray(solicitacoes) ? solicitacoes : [])
+                        .filter(s => s.status === 'pendente')
+                        .forEach((s) => pendingRequests.push({
+                            ...s,
+                            kind: 'projeto',
+                            projeto_id: p.id,
+                            projeto_nome: p.nome
+                        }));
+                } catch {}
+            })
+        );
+
+        // Solicitações de EMPRESA: só para owner/admin da empresa
+        await Promise.all(
+            companies.map(async (c) => {
+                try {
+                    let canManage = String(c.dono_id) === String(userData.id);
+                    if (!canManage) {
+                        const membersResp = await fetch(API_URLS.empresas + '/empresas/' + c.id + '/membros', { headers: authHeaders() });
+                        const members = await handleResponse(membersResp);
+                        const me = (Array.isArray(members) ? members : []).find(m => String(m.usuario_id) === String(userData.id));
+                        const role = String(me?.role || '').toLowerCase();
+                        canManage = ['owner', 'admin'].includes(role);
+                    }
+                    if (!canManage) return;
+
+                    const resp = await fetch(API_URLS.empresas + '/empresas/' + c.id + '/solicitacoes', { headers: authHeaders() });
+                    const solicitacoes = await handleResponse(resp);
+                    (Array.isArray(solicitacoes) ? solicitacoes : [])
+                        .filter(s => s.status === 'pendente')
+                        .forEach((s) => pendingRequests.push({
+                            ...s,
+                            kind: 'empresa',
+                            empresa_id: c.id,
+                            empresa_nome: c.nome
+                        }));
+                } catch {}
+            })
+        );
+
+        renderProjectRequests(pendingRequests.slice(0, DASHBOARD_LIMIT));
 
     } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
@@ -378,9 +396,52 @@ function renderProjects(projects) {
     `).join('');
 }
 
+
+function renderArchivedProjects(projects) {
+    const container = document.getElementById('archived-projects-container');
+    if (!container) return;
+    if (projects.length === 0) {
+        container.innerHTML = '<p style="padding: 16px; color: #64748b;">Nenhum projeto arquivado.</p>';
+        return;
+    }
+    container.innerHTML = projects.map(p => `
+        <a href="/projeto/configuracoes?id=${p.id}" class="list-item" style="text-decoration: none; color: inherit;">
+            <div class="item-icon ${resolveProjectColor(p)}">
+                <img src="/static/pngs/folder.png" alt="Projeto" style="width:16px; height:16px; ">
+            </div>
+            <div class="item-text">
+                <strong>${p.nome}</strong>
+                <p>Arquivado</p>
+            </div>
+            <div class="item-meta">›</div>
+        </a>
+    `).join('');
+}
+
+function renderProjectRequests(requests) {
+    const container = document.getElementById('project-requests-container');
+    if (!container) return;
+    if (requests.length === 0) {
+        container.innerHTML = '<p style="padding: 16px; color: #64748b;">Nenhuma solicitação pendente.</p>';
+        return;
+    }
+    container.innerHTML = requests.map(r => `
+        <a href="${r.kind === 'empresa' ? `/empresa/solicitacoes?id=${r.empresa_id}` : `/projeto/solicitacoes?id=${r.projeto_id}`}" class="list-item" style="text-decoration: none; color: inherit;">
+            <div class="item-icon amber">
+                <img src="/static/pngs/clock.png" alt="Solicitação" style="width:16px; height:16px; ">
+            </div>
+            <div class="item-text">
+                <strong>${r.kind === 'empresa' ? `Empresa: ${r.empresa_nome}` : `Projeto: ${r.projeto_nome}`}</strong>
+                <p>Solicitação pendente</p>
+            </div>
+            <div class="item-meta">›</div>
+        </a>
+    `).join('');
+}
 // Inicializa o carregamento
 document.addEventListener('DOMContentLoaded', loadDashboardData);
 </script>
 
 </body>
 </html>
+
