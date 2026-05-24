@@ -256,16 +256,24 @@ async function loadConfigPage() {
             const papeis = await papeisResp.json();
             const rolesContainer = document.getElementById('roles-container');
             rolesContainer.innerHTML = papeis.map(p => {
-                const icons = { 'Owner': '♕', 'Admin': '★', 'Member': '•' };
-                const icon = icons[p.nome] || '•';
-                const permTags = p.permissoes.split(',').filter(x => x).map(perm => {
-                    const label = perm.replace(/_/g, ' ');
-                    return `<span class="perm-tag" style="text-transform: capitalize;">${label}</span>`;
+                const roleNames = { owner: 'Owner', admin: 'Admin', member: 'Membro' };
+                const roleName = roleNames[String(p.nome || '').toLowerCase()] || p.nome || 'Papel';
+                const permissionNames = {
+                    gerenciar_membros: 'Gerenciar membros',
+                    editar_configuracoes: 'Editar configurações',
+                    excluir_empresa: 'Excluir empresa',
+                    ver_empresa: 'Ver empresa',
+                    criar_projetos: 'Criar projetos'
+                };
+                const permTags = String(p.permissoes || '').split(',').filter(x => x).map(perm => {
+                    const key = perm.trim();
+                    const label = permissionNames[key] || key.replace(/_/g, ' ');
+                    return `<span class="perm-tag">${label}</span>`;
                 }).join('');
                 return `
                 <div class="rbac-role">
                     <div>
-                        <h4>${icon} ${p.nome}</h4>
+                        <h4>${roleName}</h4>
                         <p>${p.descricao}</p>
                         <div class="permission-tags">
                             ${permTags}

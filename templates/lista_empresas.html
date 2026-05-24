@@ -139,7 +139,11 @@ function renderCompanies(companies) {
     const roleBadgeHtml = (role) => {
         const r0 = String(role || '').toLowerCase();
         const r = (r0 === 'owner' || r0 === 'admin' || r0 === 'member') ? r0 : 'member';
+<<<<<<< Updated upstream
         if (r === 'owner') return '<span class="badge owner">♕ Owner</span>';
+=======
+        if (r === 'owner') return '<span class="badge owner">Owner</span>';
+>>>>>>> Stashed changes
         if (r === 'admin') return '<span class="badge admin">Admin</span>';
         return '<span class="badge">Membro</span>';
     };
