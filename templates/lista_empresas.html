@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -15,7 +15,7 @@
 <aside class="sidebar">
     <div class="sidebar-logo">
         <h2>DocIA</h2>
-        <p>Documentaﾃｧﾃ｣o Inteligente</p>
+        <p>Documentação Inteligente</p>
     </div>
 
     <nav class="menu">
@@ -47,7 +47,7 @@
                 <div class="profile-mini-avatar">U</div>
 
                 <div class="user-info">
-                    <strong id="sidebar-user-name">Usuﾃ｡rio</strong>
+                    <strong id="sidebar-user-name">Usuário</strong>
                     <p id="sidebar-user-email">email@exemplo.com</p>
                 </div>
 
@@ -64,7 +64,7 @@
         <header class="companies-header">
             <div>
                 <h1>Minhas Empresas</h1>
-                <p>Gerencie suas organizaﾃｧﾃｵes e empresas</p>
+                <p>Gerencie suas organizações e empresas</p>
             </div>
 
             <button class="new-company-btn" id="btn-nova-empresa">
@@ -74,11 +74,11 @@
 
         <div class="company-search">
             <img src="{{ url_for('static', path='pngs/search.png') }}" alt="Buscar">
-            <input type="text" placeholder="Buscar empresas...">
+            <input type="text" id="company-search-input" placeholder="Buscar empresas...">
         </div>
 
         <section class="companies-grid" id="companies-grid">
-            <!-- Empresas serﾃ｣o carregadas aqui via JS -->
+            <!-- Empresas serão carregadas aqui via JS -->
             <p style="padding: 16px; grid-column: 1/-1; text-align: center; color: #666;">Carregando empresas...</p>
         </section>
 
@@ -89,6 +89,13 @@
 <div class="help-btn">?</div>
 
 <script>
+let allCompanies = [];
+const pinnedCompanyIds = new Set(JSON.parse(localStorage.getItem('pinnedCompanyIds') || '[]'));
+
+function savePinnedCompanies() {
+    localStorage.setItem('pinnedCompanyIds', JSON.stringify([...pinnedCompanyIds]));
+}
+
 async function loadCompanies() {
     try {
         // 1. Carregar Perfil (Sidebar)
@@ -122,26 +129,57 @@ async function loadCompanies() {
             })
         );
 
-        renderCompanies(enriched);
+        allCompanies = sortCompanies(enriched);
+        applyCompanySearch();
 
     } catch (error) {
         console.error("Erro ao carregar empresas:", error);
     }
 }
 
+function sortCompanies(companies) {
+    return [...companies].sort((a, b) => {
+        const aPinned = pinnedCompanyIds.has(Number(a.id));
+        const bPinned = pinnedCompanyIds.has(Number(b.id));
+        if (aPinned !== bPinned) return aPinned ? -1 : 1;
+        return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+    });
+}
+
+function applyCompanySearch() {
+    const input = document.getElementById('company-search-input');
+    const term = (input?.value || '').trim().toLowerCase();
+    const filtered = !term
+        ? allCompanies
+        : allCompanies.filter((c) => {
+            const haystack = `${c.nome || ''} ${c.descricao || ''}`.toLowerCase();
+            return haystack.includes(term);
+        });
+
+    renderCompanies(sortCompanies(filtered));
+}
+
 function renderCompanies(companies) {
     const grid = document.getElementById('companies-grid');
     if (companies.length === 0) {
-        grid.innerHTML = '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Você ainda não participa de nenhuma empresa.</p>';
+        const input = document.getElementById('company-search-input');
+        const term = (input?.value || '').trim();
+        grid.innerHTML = term
+            ? '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Nenhuma empresa encontrada.</p>'
+            : '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Voce ainda nao participa de nenhuma empresa.</p>';
         return;
     }
 
     const roleBadgeHtml = (role) => {
         const r0 = String(role || '').toLowerCase();
         const r = (r0 === 'owner' || r0 === 'admin' || r0 === 'member') ? r0 : 'member';
-        if (r === 'owner') return '<span class="badge owner">♕ Owner</span>';
+        if (r === 'owner') return '<span class="badge owner">? Owner</span>';
         if (r === 'admin') return '<span class="badge admin">Admin</span>';
         return '<span class="badge">Membro</span>';
+    };
+
+    const pinnedBadgeHtml = (id) => {
+        return pinnedCompanyIds.has(Number(id)) ? '<span class="badge pinned">Fixada</span>' : '';
     };
     
 
@@ -151,11 +189,21 @@ function renderCompanies(companies) {
                 <div class="company-big-icon ${c.cor || 'indigo'}">
                     <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
-                <span class="dots" aria-label="Mais opções"><img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;"></span>
+                <div class="company-actions" onclick="event.stopPropagation()">
+                    <button type="button" class="dots" aria-label="Mais opcoes" onclick="toggleCompanyMenu(event, ${c.id})">
+                        <img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;">
+                    </button>
+                    <div class="company-action-menu" id="company-menu-${c.id}">
+                        <button type="button" onclick="togglePinnedCompany(${c.id})">${pinnedCompanyIds.has(Number(c.id)) ? 'Desfixar' : 'Fixar'}</button>
+                        <button type="button" onclick="openCompanySettings(${c.id})">Configuracoes</button>
+                        <button type="button" onclick="copyInviteCode(${c.id})">Copiar codigo de convite</button>
+                    </div>
+                </div>
             </div>
             <h2>${c.nome}</h2>
             <div class="badges">
                 ${roleBadgeHtml(c.my_role)}
+                ${pinnedBadgeHtml(c.id)}
             </div>
             <div class="company-card-footer">
                 <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Membros ${c.membros_count === null ? '' : `<strong style="margin-left:4px;">${c.membros_count}</strong>`}</span>
@@ -165,7 +213,56 @@ function renderCompanies(companies) {
     `).join('');
 }
 
-// Abrir Modal de Opﾃｧﾃｵes de Empresa
+function closeCompanyMenus() {
+    document.querySelectorAll('.company-action-menu.show').forEach((menu) => {
+        menu.classList.remove('show');
+    });
+}
+
+function toggleCompanyMenu(event, companyId) {
+    event.stopPropagation();
+    const menu = document.getElementById(`company-menu-${companyId}`);
+    const shouldOpen = !menu.classList.contains('show');
+    closeCompanyMenus();
+    if (shouldOpen) menu.classList.add('show');
+}
+
+function togglePinnedCompany(companyId) {
+    const id = Number(companyId);
+    if (pinnedCompanyIds.has(id)) {
+        pinnedCompanyIds.delete(id);
+    } else {
+        pinnedCompanyIds.add(id);
+    }
+    savePinnedCompanies();
+    closeCompanyMenus();
+    allCompanies = sortCompanies(allCompanies);
+    applyCompanySearch();
+}
+
+function openCompanySettings(companyId) {
+    closeCompanyMenus();
+    window.location.href = `/empresa/configuracoes?id=${companyId}`;
+}
+
+async function copyInviteCode(companyId) {
+    closeCompanyMenus();
+    const inviteCode = `DOCUIA-E${companyId}`;
+    try {
+        await navigator.clipboard.writeText(inviteCode);
+        alert("Codigo de convite copiado.");
+    } catch (error) {
+        const temp = document.createElement('input');
+        temp.value = inviteCode;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        temp.remove();
+        alert("Codigo de convite copiado.");
+    }
+}
+
+// Abrir Modal de Opções de Empresa
 document.getElementById('btn-nova-empresa').addEventListener('click', () => {
     document.getElementById('company-options-modal').classList.add('show');
 });
@@ -174,7 +271,7 @@ function closeCompanyModal() {
     document.getElementById('company-options-modal').classList.remove('show');
 }
 
-// Opﾃｧﾃ｣o: Criar Nova Empresa
+// Opção: Criar Nova Empresa
 function openCreateCompanyPrompt() {
     closeCompanyModal();
     document.getElementById('create-company-modal').classList.add('show');
@@ -187,7 +284,7 @@ function backToOptionsFromCreate() {
 
 async function submitCreateCompany() {
     const nome = document.getElementById('create-empresa-nome').value;
-    if (!nome) return alert("O nome da empresa ﾃｩ obrigatﾃｳrio.");
+    if (!nome) return alert("O nome da empresa é obrigatório.");
     const descricao = document.getElementById('create-empresa-desc').value;
 
     const btn = document.querySelector('#create-company-modal .modal-footer-btns .btn-acao');
@@ -216,7 +313,7 @@ async function submitCreateCompany() {
     }
 }
 
-// Opﾃｧﾃ｣o: Entrar em uma Empresa
+// Opção: Entrar em uma Empresa
 function openJoinCompanyPrompt() {
     closeCompanyModal();
     document.getElementById('join-company-modal').classList.add('show');
@@ -229,11 +326,11 @@ function backToOptionsFromJoin() {
 
 async function submitJoinCompany() {
     const codigo = document.getElementById('join-empresa-codigo').value.trim();
-    if (!codigo) return alert("O cﾃｳdigo de convite ﾃｩ obrigatﾃｳrio.");
+    if (!codigo) return alert("O código de convite é obrigatório.");
     
-    // O cﾃｳdigo esperado ﾃｩ no formato DOCUIA-E[id], ex: DOCUIA-E1
+    // O código esperado é no formato DOCUIA-E[id], ex: DOCUIA-E1
     const match = codigo.match(/DOCUIA-E(\d+)/i);
-    if (!match) return alert("Cﾃｳdigo de convite invﾃ｡lido. O formato deve ser DOCUIA-E seguido do nﾃｺmero.");
+    if (!match) return alert("Código de convite inválido. O formato deve ser DOCUIA-E seguido do número.");
     const empresaId = match[1];
     const mensagem = document.getElementById('join-empresa-msg').value.trim();
 
@@ -253,7 +350,7 @@ async function submitJoinCompany() {
         document.getElementById('join-empresa-codigo').value = '';
         document.getElementById('join-empresa-msg').value = '';
         
-        alert("Solicitaﾃｧﾃ｣o enviada com sucesso!");
+        alert("Solicitação enviada com sucesso!");
         loadCompanies();
     } catch (error) {
         alert(error.message);
@@ -263,7 +360,10 @@ async function submitJoinCompany() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadCompanies);
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('company-search-input')?.addEventListener('input', applyCompanySearch);
+    loadCompanies();
+});
 
 // Toggle menu logic
 function toggleUserMenu() {
@@ -271,6 +371,10 @@ function toggleUserMenu() {
     menu.classList.toggle("show");
 }
 window.addEventListener("click", function(e) {
+    if (!e.target.closest('.company-actions')) {
+        closeCompanyMenus();
+    }
+
     const menu = document.getElementById("userMenu");
     const button = document.querySelector(".user-toggle");
     if (menu && !menu.contains(e.target) && button && !button.contains(e.target)) {
@@ -279,11 +383,11 @@ window.addEventListener("click", function(e) {
 });
 </script>
 
-<!-- MODAL DE OPﾃ・髭S DE EMPRESA -->
+<!-- MODAL DE OPÇÕES DE EMPRESA -->
 <div id="company-options-modal" class="modal-overlay">
     <div class="modal-card">
         <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Empresa</h2>
-        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Escolha uma opﾃｧﾃ｣o:</p>
+        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Escolha uma opção:</p>
 
         <button class="modal-option-btn" onclick="openCreateCompanyPrompt()">
             <div class="option-icon blue-bg">
@@ -291,7 +395,7 @@ window.addEventListener("click", function(e) {
             </div>
             <div class="option-text">
                 <h3>Criar Nova Empresa</h3>
-                <p>Crie e gerencie sua prﾃｳpria empresa</p>
+                <p>Crie e gerencie sua própria empresa</p>
             </div>
         </button>
 
@@ -301,7 +405,7 @@ window.addEventListener("click", function(e) {
             </div>
             <div class="option-text">
                 <h3>Entrar em uma Empresa</h3>
-                <p>Use um cﾃｳdigo de convite para entrar</p>
+                <p>Use um código de convite para entrar</p>
             </div>
         </button>
 
@@ -320,8 +424,8 @@ window.addEventListener("click", function(e) {
         </div>
         
         <div class="modal-form-group">
-            <label>Descriﾃｧﾃ｣o (opcional)</label>
-            <textarea id="create-empresa-desc" placeholder="Breve descriﾃｧﾃ｣o da empresa..."></textarea>
+            <label>Descrição (opcional)</label>
+            <textarea id="create-empresa-desc" placeholder="Breve descrição da empresa..."></textarea>
         </div>
         
         <div class="modal-footer-btns">
@@ -335,20 +439,20 @@ window.addEventListener("click", function(e) {
 <div id="join-company-modal" class="modal-overlay">
     <div class="modal-card">
         <h2 style="font-size: 19px; font-weight: 800; color: #020617; margin-bottom: 6px;">Entrar em uma Empresa</h2>
-        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Digite o cﾃｳdigo de convite que vocﾃｪ recebeu</p>
+        <p style="font-size: 12px; color: #475569; margin-bottom: 19px;">Digite o código de convite que você recebeu</p>
 
         <div class="modal-form-group">
-            <label>Cﾃｳdigo de Convite</label>
+            <label>Código de Convite</label>
             <input type="text" id="join-empresa-codigo" placeholder="EX: ABC123XYZ">
         </div>
 
         <div class="modal-form-group">
             <label>Mensagem (opcional)</label>
-            <textarea id="join-empresa-msg" placeholder="Por que vocﾃｪ gostaria de participar desta empresa?"></textarea>
+            <textarea id="join-empresa-msg" placeholder="Por que você gostaria de participar desta empresa?"></textarea>
         </div>
 
         <div class="modal-info-box">
-            Vocﾃｪ receberﾃ｡ acesso ﾃ empresa apﾃｳs o administrador aprovar sua solicitaﾃｧﾃ｣o
+            Você receberá acesso à empresa após o administrador aprovar sua solicitação
         </div>
 
         <div class="modal-footer-btns">
