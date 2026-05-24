@@ -74,7 +74,7 @@
 
         <div class="company-search">
             <img src="{{ url_for('static', path='pngs/search.png') }}" alt="Buscar">
-            <input type="text" id="company-search-input" placeholder="Buscar empresas...">
+            <input type="text" placeholder="Buscar empresas...">
         </div>
 
         <section class="companies-grid" id="companies-grid">
@@ -89,13 +89,6 @@
 <div class="help-btn">?</div>
 
 <script>
-let allCompanies = [];
-const pinnedCompanyIds = new Set(JSON.parse(localStorage.getItem('pinnedCompanyIds') || '[]'));
-
-function savePinnedCompanies() {
-    localStorage.setItem('pinnedCompanyIds', JSON.stringify([...pinnedCompanyIds]));
-}
-
 async function loadCompanies() {
     try {
         // 1. Carregar Perfil (Sidebar)
@@ -129,57 +122,26 @@ async function loadCompanies() {
             })
         );
 
-        allCompanies = sortCompanies(enriched);
-        applyCompanySearch();
+        renderCompanies(enriched);
 
     } catch (error) {
         console.error("Erro ao carregar empresas:", error);
     }
 }
 
-function sortCompanies(companies) {
-    return [...companies].sort((a, b) => {
-        const aPinned = pinnedCompanyIds.has(Number(a.id));
-        const bPinned = pinnedCompanyIds.has(Number(b.id));
-        if (aPinned !== bPinned) return aPinned ? -1 : 1;
-        return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
-    });
-}
-
-function applyCompanySearch() {
-    const input = document.getElementById('company-search-input');
-    const term = (input?.value || '').trim().toLowerCase();
-    const filtered = !term
-        ? allCompanies
-        : allCompanies.filter((c) => {
-            const haystack = `${c.nome || ''} ${c.descricao || ''}`.toLowerCase();
-            return haystack.includes(term);
-        });
-
-    renderCompanies(sortCompanies(filtered));
-}
-
 function renderCompanies(companies) {
     const grid = document.getElementById('companies-grid');
     if (companies.length === 0) {
-        const input = document.getElementById('company-search-input');
-        const term = (input?.value || '').trim();
-        grid.innerHTML = term
-            ? '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Nenhuma empresa encontrada.</p>'
-            : '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Voce ainda nao participa de nenhuma empresa.</p>';
+        grid.innerHTML = '<p style="padding: 32px; grid-column: 1/-1; text-align: center; color: #666;">Voce ainda nao participa de nenhuma empresa.</p>';
         return;
     }
 
     const roleBadgeHtml = (role) => {
         const r0 = String(role || '').toLowerCase();
         const r = (r0 === 'owner' || r0 === 'admin' || r0 === 'member') ? r0 : 'member';
-        if (r === 'owner') return '<span class="badge owner">? Owner</span>';
+        if (r === 'owner') return '<span class="badge owner">Owner</span>';
         if (r === 'admin') return '<span class="badge admin">Admin</span>';
         return '<span class="badge">Membro</span>';
-    };
-
-    const pinnedBadgeHtml = (id) => {
-        return pinnedCompanyIds.has(Number(id)) ? '<span class="badge pinned">Fixada</span>' : '';
     };
     
 
@@ -189,21 +151,11 @@ function renderCompanies(companies) {
                 <div class="company-big-icon ${c.cor || 'indigo'}">
                     <img src="{{ url_for('static', path='pngs/business-and-trade.png') }}" alt="Empresa" style="width:22px; height:22px; ">
                 </div>
-                <div class="company-actions" onclick="event.stopPropagation()">
-                    <button type="button" class="dots" aria-label="Mais opcoes" onclick="toggleCompanyMenu(event, ${c.id})">
-                        <img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;">
-                    </button>
-                    <div class="company-action-menu" id="company-menu-${c.id}">
-                        <button type="button" onclick="togglePinnedCompany(${c.id})">${pinnedCompanyIds.has(Number(c.id)) ? 'Desfixar' : 'Fixar'}</button>
-                        <button type="button" onclick="openCompanySettings(${c.id})">Configuracoes</button>
-                        <button type="button" onclick="copyInviteCode(${c.id})">Copiar codigo de convite</button>
-                    </div>
-                </div>
+                <span class="dots" aria-label="Mais opcoes"><img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;"></span>
             </div>
             <h2>${c.nome}</h2>
             <div class="badges">
                 ${roleBadgeHtml(c.my_role)}
-                ${pinnedBadgeHtml(c.id)}
             </div>
             <div class="company-card-footer">
                 <span><img src="/static/pngs/users.png" style="width:11px; height:11px; vertical-align:text-bottom; "> Membros ${c.membros_count === null ? '' : `<strong style="margin-left:4px;">${c.membros_count}</strong>`}</span>
@@ -211,55 +163,6 @@ function renderCompanies(companies) {
             </div>
         </article>
     `).join('');
-}
-
-function closeCompanyMenus() {
-    document.querySelectorAll('.company-action-menu.show').forEach((menu) => {
-        menu.classList.remove('show');
-    });
-}
-
-function toggleCompanyMenu(event, companyId) {
-    event.stopPropagation();
-    const menu = document.getElementById(`company-menu-${companyId}`);
-    const shouldOpen = !menu.classList.contains('show');
-    closeCompanyMenus();
-    if (shouldOpen) menu.classList.add('show');
-}
-
-function togglePinnedCompany(companyId) {
-    const id = Number(companyId);
-    if (pinnedCompanyIds.has(id)) {
-        pinnedCompanyIds.delete(id);
-    } else {
-        pinnedCompanyIds.add(id);
-    }
-    savePinnedCompanies();
-    closeCompanyMenus();
-    allCompanies = sortCompanies(allCompanies);
-    applyCompanySearch();
-}
-
-function openCompanySettings(companyId) {
-    closeCompanyMenus();
-    window.location.href = `/empresa/configuracoes?id=${companyId}`;
-}
-
-async function copyInviteCode(companyId) {
-    closeCompanyMenus();
-    const inviteCode = `DOCUIA-E${companyId}`;
-    try {
-        await navigator.clipboard.writeText(inviteCode);
-        alert("Codigo de convite copiado.");
-    } catch (error) {
-        const temp = document.createElement('input');
-        temp.value = inviteCode;
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand('copy');
-        temp.remove();
-        alert("Codigo de convite copiado.");
-    }
 }
 
 // Abrir Modal de Opções de Empresa
@@ -360,10 +263,7 @@ async function submitJoinCompany() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('company-search-input')?.addEventListener('input', applyCompanySearch);
-    loadCompanies();
-});
+document.addEventListener('DOMContentLoaded', loadCompanies);
 
 // Toggle menu logic
 function toggleUserMenu() {
@@ -371,10 +271,6 @@ function toggleUserMenu() {
     menu.classList.toggle("show");
 }
 window.addEventListener("click", function(e) {
-    if (!e.target.closest('.company-actions')) {
-        closeCompanyMenus();
-    }
-
     const menu = document.getElementById("userMenu");
     const button = document.querySelector(".user-toggle");
     if (menu && !menu.contains(e.target) && button && !button.contains(e.target)) {

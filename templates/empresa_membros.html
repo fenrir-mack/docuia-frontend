@@ -222,7 +222,7 @@ async function loadMembersPage() {
     }
 }
 
-const roleLabels = { owner: '♕ Owner', admin: '⬡ Admin', member: '♙ Member' };
+const roleLabels = { owner: 'Owner', admin: 'Admin', member: 'Membro' };
 const roleClasses = { owner: 'owner', admin: 'admin', member: 'member' };
 
 function renderMembers(members) {
@@ -247,15 +247,15 @@ function renderMembers(members) {
         const canEdit = (myRole === 'owner' || myRole === 'admin') && !isMe && !(myRole === 'admin' && isOwner);
         
         if (canEdit) {
-            const ownerOption = myRole === 'owner' ? `<option value="owner" ${m.role === 'owner' ? 'selected' : ''}>♕ Owner</option>` : '';
+            const ownerOption = myRole === 'owner' ? `<option value="owner" ${m.role === 'owner' ? 'selected' : ''}>Owner</option>` : '';
             actionsHtml += `
                 <button class="btn-outline" id="btn-edit-${m.usuario_id}" onclick="enableEdit(${m.usuario_id})" style="padding: 3px 6px; font-size: 10px; margin-left: 6px;">Editar</button>
 
                 <div id="edit-controls-${m.usuario_id}" style="display: none; align-items: center; gap: 6px; margin-left: 6px;">
                     <select class="form-control" id="select-role-${m.usuario_id}" style="width: 88px; padding: 3px; font-size: 10px;">
                         ${ownerOption}
-                        <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>⬡ Admin</option>
-                        <option value="member" ${m.role === 'member' ? 'selected' : ''}>♙ Member</option>
+                        <option value="admin" ${m.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        <option value="member" ${m.role === 'member' ? 'selected' : ''}>Membro</option>
                     </select>
                     <button class="btn-primary" onclick="confirmEdit(${m.usuario_id})" style="padding: 3px 10px; font-size: 10px;">Salvar</button>
                     <button onclick="removerMembro(${m.usuario_id})" class="btn-outline" style="border-color: #dc2626; color: #dc2626; padding: 3px 6px; font-size: 10px;">Remover</button>

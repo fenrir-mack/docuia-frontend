@@ -327,8 +327,11 @@ async function loadConfigPage() {
                 const roleLabel = (name) => {
                     const n = String(name || '').trim();
                     const key = n.toLowerCase();
-                    if (key === 'admin') return '⬡ Admin';
-                    if (key === 'member') return '♙ Member';
+                    if (key === 'owner') return 'Owner';
+                    if (key === 'admin') return 'Admin';
+                    if (key === 'member') return 'Membro';
+                    if (key === 'editor') return 'Editor';
+                    if (key === 'viewer') return 'Visualizador';
                     return n || 'Role';
                 };
                 const permLabel = (perm) => {
@@ -336,7 +339,7 @@ async function loadConfigPage() {
                         gerenciar_membros: 'Gerenciar membros',
                         editar_configuracoes: 'Editar configurações',
                         excluir_projeto: 'Excluir projeto',
-                        ver_projeto: 'Ver o projeto'
+                        ver_projeto: 'Ver projeto'
                     };
                     return map[perm] || perm.replace(/_/g, ' ');
                 };
