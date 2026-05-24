@@ -131,7 +131,7 @@
         <div class="config-section">
             <h3>Papéis e Permissões</h3>
             <p class="sub">Defina os níveis de acesso para membros da empresa</p>
-            
+
             <div id="roles-container">
                 <p style="color: #64748b; font-size: 11px;">Carregando papéis...</p>
             </div>
@@ -139,7 +139,6 @@
         <div class="config-section" style="margin-top: 32px; border: 1px solid #fee2e2; border-radius: 10px; overflow: hidden; padding: 0;">
             <div style="background-color: #fef2f2; padding: 19px; border-bottom: 1px solid #fee2e2;">
                 <h3 style="color: #dc2626; margin: 0; font-size: 14px;">Zona de Perigo</h3>
-                <p class="danger-sub" style="color: #991b1b; margin: 0;">Ações destrutivas para esta empresa.</p>
             </div>
             <div style="padding: 19px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 13px; margin-bottom: 16px;">
@@ -347,7 +346,7 @@ window.addEventListener("click", function(e) {
 
     async function excluirEmpresa() {
         if (!confirm("Tem certeza que deseja excluir esta empresa? Ela ficará invisível para todos os membros.")) return;
-        
+
         try {
             const resp = await fetch(API_URLS.empresas + "/empresas/" + companyId, {
                 method: "DELETE",

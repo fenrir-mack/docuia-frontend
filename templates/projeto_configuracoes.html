@@ -97,21 +97,6 @@
             </div>
         </div>
 
-        <div class="company-stats-grid">
-            <div class="company-stat-card">
-                <span><img src="/static/pngs/users.png" alt="Membros" style="width:11px; height:11px;"> Membros</span>
-                <strong id="stats-members">0</strong>
-            </div>
-            <div class="company-stat-card">
-                <span><img src="/static/pngs/clock.png" alt="Solicitações" style="width:11px; height:11px;"> Solicitações</span>
-                <strong id="stats-solicitacoes">0</strong>
-            </div>
-            <div class="company-stat-card">
-                <span><img src="/static/pngs/file.png" alt="Documentos" style="width:11px; height:11px;"> Documentos</span>
-                <strong style="font-size: 11px; font-weight: normal; color: #6b7280; padding-top: 3px;">Em breve</strong>
-            </div>
-        </div>
-
         <div class="project-tabs" id="project-tabs">
             <a href="#" class="tab" id="tab-visao-geral">Visão Geral</a>
             <a href="#" class="tab" id="tab-membros">Membros</a>
@@ -150,7 +135,6 @@
         <div class="config-section" style="margin-top: 32px; border: 1px solid #fee2e2; border-radius: 10px; overflow: hidden; padding: 0;">
             <div style="background-color: #fef2f2; padding: 19px; border-bottom: 1px solid #fee2e2;">
                 <h3 style="color: #dc2626; margin: 0; font-size: 14px;">Zona de Perigo</h3>
-                <p class="danger-sub" style="color: #991b1b; margin: 0;">Ações destrutivas para este projeto.</p>
             </div>
             <div style="padding: 19px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 13px; margin-bottom: 16px;">
@@ -225,8 +209,17 @@ function resolveAccentColor(project, company) {
     return 'teal';
 }
 
+function syncArchiveButton() {
+    const archiveBtn = document.getElementById('btn-arquivar');
+    if (!archiveBtn) return;
+    const isArchived = currentProjectStatus === "arquivado";
+    archiveBtn.innerText = isArchived ? "Desarquivar Projeto" : "Arquivar Projeto";
+}
+
 const urlParams = new URLSearchParams(window.location.search);
 const projectId = urlParams.get('id');
+let currentProjectStatus = "";
+let isArchivingProject = false;
 
 if (!projectId) {
     alert("Projeto não especificado!");
@@ -247,6 +240,8 @@ async function loadConfigPage() {
 
         const projResp = await fetch(API_URLS.projetos + "/projetos/" + projectId, { headers: authHeaders() });
         const project = await handleResponse(projResp);
+        currentProjectStatus = String(project.status || "").toLowerCase();
+        syncArchiveButton();
         fetch(API_URLS.projetos + `/projetos/${projectId}/acessos`, { method: "POST", headers: authHeaders() }).catch(() => {});
         document.getElementById('project-name').innerText = project.nome;
         document.getElementById('project-description').innerText = project.descricao || "";
@@ -293,18 +288,6 @@ async function loadConfigPage() {
         const solicitacoes = await handleResponse(solResp);
         const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
         if (pendentes > 0) { document.getElementById('tab-badge-sol').innerText = pendentes; document.getElementById('tab-badge-sol').style.display = 'flex'; }
-        const solEl = document.getElementById('stats-solicitacoes');
-        if (solEl) solEl.innerText = String(pendentes);
-
-        // Stats: membros
-        try {
-            const membersResp = await fetch(API_URLS.projetos + `/projetos/${projectId}/membros`, { headers: authHeaders() });
-            const members = await handleResponse(membersResp);
-            const mCount = Array.isArray(members) ? members.length : 0;
-            const membersEl = document.getElementById('stats-members');
-            if (membersEl) membersEl.innerText = String(mCount);
-        } catch {}
-
         // Papéis e permissões (fallback no frontend; endpoint pode não existir no MS de projetos)
         const rolesContainer = document.getElementById('roles-container');
         if (rolesContainer) {
@@ -387,17 +370,31 @@ document.getElementById('btn-salvar').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-arquivar').addEventListener('click', async () => {
-    if (!confirm("Tem certeza que deseja arquivar este projeto?")) return;
+    if (isArchivingProject) return;
+    const isArchived = currentProjectStatus === "arquivado";
+    if (!confirm(isArchived ? "Tem certeza que deseja desarquivar este projeto?" : "Tem certeza que deseja arquivar este projeto?")) return;
+
+    isArchivingProject = true;
+    const archiveBtn = document.getElementById('btn-arquivar');
+    const originalText = archiveBtn.innerText;
+    archiveBtn.disabled = true;
+    archiveBtn.innerText = isArchived ? "Desarquivando..." : "Arquivando...";
+
     try {
-        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/arquivar", {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId + (isArchived ? "/desarquivar" : "/arquivar"), {
             method: "PUT",
             headers: authHeaders()
         });
         await handleResponse(resp);
-        alert("Projeto arquivado com sucesso.");
+        currentProjectStatus = isArchived ? "ativo" : "arquivado";
+        syncArchiveButton();
+        alert(isArchived ? "Projeto desarquivado com sucesso." : "Projeto arquivado com sucesso.");
         window.location.href = "/projetos";
     } catch (error) {
         alert(error.message);
+        archiveBtn.disabled = false;
+        archiveBtn.innerText = originalText;
+        isArchivingProject = false;
     }
 });
 

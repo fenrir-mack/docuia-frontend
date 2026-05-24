@@ -143,6 +143,9 @@
 <script>
 const PROJECT_COLOR_CLASSES = ['teal', 'rose', 'amber', 'indigo', 'emerald', 'cyan'];
 const companiesById = new Map();
+let allProjects = [];
+let currentFilter = 'todos';
+const recentAccessByProjectId = new Map();
 
 function resolveProjectColor(project) {
     if (PROJECT_COLOR_CLASSES.includes(project.cor)) {
@@ -162,21 +165,31 @@ async function loadProjects() {
         document.getElementById('sidebar-user-email').innerText = user.email;
 
         // 2. Carregar Projetos e Empresas
-        const [resp, empResp] = await Promise.all([
+        const [resp, empResp, recentResp] = await Promise.all([
             fetch(API_URLS.projetos + "/projetos", { headers: authHeaders() }),
-            fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() })
+            fetch(API_URLS.empresas + "/empresas", { headers: authHeaders() }),
+            fetch(API_URLS.projetos + "/projetos/recentes?limit=50", { headers: authHeaders() })
         ]);
         const projects = await handleResponse(resp);
         const companies = await handleResponse(empResp);
+        const recentes = await handleResponse(recentResp).catch(() => []);
 
         companiesById.clear();
         companies.forEach(c => companiesById.set(c.id, c));
+        recentAccessByProjectId.clear();
+        if (Array.isArray(recentes)) {
+            recentes.forEach((r) => {
+                if (r && r.id != null && r.ultimo_acesso_em) {
+                    recentAccessByProjectId.set(Number(r.id), String(r.ultimo_acesso_em));
+                }
+            });
+        }
 
-        const activeProjectsBasic = projects.filter(p => p.status !== 'arquivado' && p.status !== 'excluido');
+        const visibleProjectsBasic = projects.filter(p => p.status !== 'excluido');
 
         // Buscar detalhes para exibir a descrição (MS3)
-        const activeProjects = await Promise.all(
-            activeProjectsBasic.map(async (p) => {
+        const detailedProjects = await Promise.all(
+            visibleProjectsBasic.map(async (p) => {
                 try {
                     const r = await fetch(API_URLS.projetos + `/projetos/${p.id}`, { headers: authHeaders() });
                     const details = await handleResponse(r);
@@ -187,9 +200,16 @@ async function loadProjects() {
             })
         );
 
-        document.getElementById('header-subtitle').innerText = `${activeProjects.length} projeto(s) ativo(s)`;
-
-        renderProjects(activeProjects);
+        // Ordena por acesso mais recente; sem acesso, mantém no fim e ordena por id (mais novo primeiro)
+        allProjects = detailedProjects.sort((a, b) => {
+            const aRecent = recentAccessByProjectId.get(Number(a.id));
+            const bRecent = recentAccessByProjectId.get(Number(b.id));
+            const aTs = aRecent ? Date.parse(aRecent) : Number.NEGATIVE_INFINITY;
+            const bTs = bRecent ? Date.parse(bRecent) : Number.NEGATIVE_INFINITY;
+            if (aTs !== bTs) return bTs - aTs;
+            return Number(b.id || 0) - Number(a.id || 0);
+        });
+        applyCurrentFilter();
 
         // 3. Carregar Empresas para o Select
         const selectEmpresa = document.getElementById('create-projeto-empresa');
@@ -228,11 +248,92 @@ function renderProjects(projects) {
                         </div>
                     </div>
                 </div>
-                <span class="project-dots" aria-label="Mais opções"><img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;"></span>
+                <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                    <button type="button" class="project-dots" aria-label="Ações do projeto" onclick="toggleProjectMenu(event, ${p.id})" title="Ações do projeto" style="border:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; width:22px; height:22px; padding:0;">
+                        <img src="/static/pngs/ellipsis-vertical.png" alt="" style="width:16px; height:16px;">
+                    </button>
+                    <div id="project-menu-${p.id}" class="project-action-menu" style="display:none; position:absolute; top:26px; right:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 8px 24px rgba(15,23,42,.12); min-width:130px; z-index:20;">
+                        ${p.status === 'arquivado'
+                            ? `<button type="button" onclick="unarchiveProject(event, ${p.id})" style="width:100%; border:0; background:#fff; text-align:left; font-size:12px; color:#0f172a; padding:9px 11px; border-radius:8px; cursor:pointer;">Desarquivar</button>`
+                            : `<button type="button" onclick="archiveProject(event, ${p.id})" style="width:100%; border:0; background:#fff; text-align:left; font-size:12px; color:#0f172a; padding:9px 11px; border-radius:8px; cursor:pointer;">Arquivar</button>`
+                        }
+                    </div>
+                </div>
             </div>
             <p class="project-description">${p.descricao || 'Sem descrição'}</p>
         </article>
     `).join('');
+}
+
+function applyCurrentFilter() {
+    let filtered = allProjects;
+    if (currentFilter === 'ativos') filtered = allProjects.filter(p => p.status !== 'arquivado');
+    if (currentFilter === 'arquivados') filtered = allProjects.filter(p => p.status === 'arquivado');
+
+    const label = currentFilter === 'ativos' ? 'ativo(s)' : (currentFilter === 'arquivados' ? 'arquivado(s)' : 'no total');
+    document.getElementById('header-subtitle').innerText = `${filtered.length} projeto(s) ${label}`;
+    renderProjects(filtered);
+}
+
+async function archiveProject(event, projectId) {
+    event.stopPropagation();
+    event.preventDefault();
+    closeAllProjectMenus();
+    if (!confirm("Tem certeza que deseja arquivar este projeto?")) return;
+
+    const button = event.currentTarget;
+    const originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span style="font-size:11px;color:#64748b;">...</span>';
+
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/arquivar", {
+            method: "PUT",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        alert("Projeto arquivado com sucesso.");
+        await loadProjects();
+    } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+    }
+}
+
+async function unarchiveProject(event, projectId) {
+    event.stopPropagation();
+    event.preventDefault();
+    closeAllProjectMenus();
+    if (!confirm("Tem certeza que deseja desarquivar este projeto?")) return;
+
+    try {
+        const resp = await fetch(API_URLS.projetos + "/projetos/" + projectId + "/desarquivar", {
+            method: "PUT",
+            headers: authHeaders()
+        });
+        await handleResponse(resp);
+        alert("Projeto desarquivado com sucesso.");
+        await loadProjects();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function toggleProjectMenu(event, projectId) {
+    event.stopPropagation();
+    event.preventDefault();
+    const menu = document.getElementById(`project-menu-${projectId}`);
+    if (!menu) return;
+    const isOpen = menu.style.display === 'block';
+    closeAllProjectMenus();
+    if (!isOpen) menu.style.display = 'block';
+}
+
+function closeAllProjectMenus() {
+    document.querySelectorAll('.project-action-menu').forEach((el) => {
+        el.style.display = 'none';
+    });
 }
 
 // Abrir Modal de Criar Projeto
@@ -284,6 +385,23 @@ async function submitCreateProject() {
 }
 
 document.addEventListener('DOMContentLoaded', loadProjects);
+
+document.addEventListener('DOMContentLoaded', () => {
+    const filterButtons = Array.from(document.querySelectorAll('.projects-filters .filter-btn'));
+    filterButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach((b) => b.classList.remove('active-filter'));
+            btn.classList.add('active-filter');
+            const txt = btn.innerText.trim().toLowerCase();
+            if (txt === 'ativos') currentFilter = 'ativos';
+            else if (txt === 'arquivados') currentFilter = 'arquivados';
+            else currentFilter = 'todos';
+            applyCurrentFilter();
+        });
+    });
+});
+
+window.addEventListener('click', () => closeAllProjectMenus());
 
 function toggleUserMenu() {
     const menu = document.getElementById("userMenu");
