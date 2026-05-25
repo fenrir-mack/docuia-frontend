@@ -696,7 +696,7 @@ sequenceDiagram
 
 ### 10.1 MS1 - Auth
 
-`mermaid
+```mermaid
 classDiagram
     class Usuario {
       +int? id
@@ -740,11 +740,11 @@ classDiagram
     PerfilRouter --> EditarPerfilUseCase
     PerfilRouter --> AlterarSenhaUseCase
     UsuarioRepositoryImpl --> Usuario
-`
+```
 
 ### 10.2 MS2 - Empresas
 
-`mermaid
+```mermaid
 classDiagram
     class Empresa
     class Membro
@@ -793,11 +793,11 @@ classDiagram
     EmpresaRouter --> CriarEmpresaUseCase
     EmpresaRouter --> EditarEmpresaUseCase
     EmpresaRouter --> DeletarEmpresaUseCase
-`
+```
 
 ### 10.3 MS3 - Projetos
 
-`mermaid
+```mermaid
 classDiagram
     class Projeto
     class MembroProjeto
@@ -847,6 +847,7 @@ classDiagram
     ProjetoRouter --> CriarProjetoUseCase
     ProjetoRouter --> EditarProjetoUseCase
     ProjetoRouter --> DeletarProjetoUseCase
+```
 ---
 
 ## 11. Instalação e Execução
