@@ -1,7 +1,6 @@
-# Documentação Técnica Completa - Ecossistema DocuIA
+﻿# Documentação Técnica Completa - Ecossistema DocuIA
 
-Data da análise: 25/05/2026  
-Escopo analisado: código-fonte real em `docuia-auth`, `docuia-empresas`, `docuia-projetos`, `docuia-frontend`.
+Data da análise: 25/05/2026
 
 ## Sumário
 - [1. Visão Geral do Projeto](#1-visão-geral-do-projeto)
@@ -13,11 +12,12 @@ Escopo analisado: código-fonte real em `docuia-auth`, `docuia-empresas`, `docui
 - [7. APIs e Endpoints](#7-apis-e-endpoints)
 - [8. Interface Web (Frontend)](#8-interface-web-frontend)
 - [9. Fluxos do Sistema](#9-fluxos-do-sistema)
-- [10. Instalação e Execução](#10-instalação-e-execução)
-- [11. Repositórios Relacionados](#11-repositórios-relacionados)
-- [12. Decisões Técnicas e Trade-offs](#12-decisões-técnicas-e-trade-offs)
-- [13. Problemas e Soluções](#13-problemas-e-soluções)
-- [14. Conclusão](#14-conclusão)
+- [10. Diagramas de Classes](#10-diagramas-de-classes)
+- [11. Instalação e Execução](#11-instalação-e-execução)
+- [12. Repositórios Relacionados](#12-repositórios-relacionados)
+- [13. Decisões Técnicas e Trade-offs](#13-decisões-técnicas-e-trade-offs)
+- [14. Problemas e Soluções](#14-problemas-e-soluções)
+- [15. Conclusão](#15-conclusão)
 
 ---
 
@@ -112,12 +112,10 @@ flowchart LR
 
 ```text
 GitHub/
-├── docuia-auth/
-├── docuia-empresas/
-├── docuia-projetos/
-├── docuia-frontend/
-├── rodar_tudo.ps1
-└── subir_tudo.ps1
+笏懌楳笏 docuia-auth/
+笏懌楳笏 docuia-empresas/
+笏懌楳笏 docuia-projetos/
+笏懌楳笏 docuia-frontend/
 ```
 
 ### 3.2 `docuia-auth` (MS1)
@@ -450,9 +448,9 @@ erDiagram
 ## 7. APIs e Endpoints
 
 Notas:
-- URLs base locais padrão:  
-  - MS1: `http://localhost:8001`  
-  - MS2: `http://localhost:8002`  
+- URLs base locais padrão:
+  - MS1: `http://localhost:8001`
+  - MS2: `http://localhost:8002`
   - MS3: `http://localhost:8003`
 - Auth: `Bearer JWT` quando indicado.
 
@@ -691,16 +689,173 @@ sequenceDiagram
 - Ao abrir páginas de empresa/projeto, frontend registra acesso (`/acessos`).
 - Dashboard usa endpoints `.../recentes` para ordenar por último acesso.
 
+
 ---
 
-## 10. Instalação e Execução
+## 10. Diagramas de Classes
 
-### 10.1 Pré-requisitos
+### 10.1 MS1 - Auth
+
+`mermaid
+classDiagram
+    class Usuario {
+      +int? id
+      +str nome
+      +str email
+      +str senha_hash
+      +str cargo
+      +datetime criado_em
+      +tem_dados_completos() bool
+    }
+
+    class IUsuarioRepository {
+      <<interface>>
+      +salvar(usuario) Usuario
+      +buscar_por_email(email) Usuario?
+      +buscar_por_id(id) Usuario?
+      +atualizar(usuario) Usuario
+    }
+
+    class UsuarioRepositoryImpl
+    class LoginUseCase
+    class CadastroUseCase
+    class RecuperarSenhaUseCase
+    class RedefinirSenhaUseCase
+    class EditarPerfilUseCase
+    class AlterarSenhaUseCase
+    class AuthRouter
+    class PerfilRouter
+
+    IUsuarioRepository <|.. UsuarioRepositoryImpl
+    LoginUseCase --> IUsuarioRepository
+    CadastroUseCase --> IUsuarioRepository
+    RecuperarSenhaUseCase --> IUsuarioRepository
+    RedefinirSenhaUseCase --> IUsuarioRepository
+    EditarPerfilUseCase --> IUsuarioRepository
+    AlterarSenhaUseCase --> IUsuarioRepository
+    AuthRouter --> LoginUseCase
+    AuthRouter --> CadastroUseCase
+    AuthRouter --> RecuperarSenhaUseCase
+    AuthRouter --> RedefinirSenhaUseCase
+    PerfilRouter --> EditarPerfilUseCase
+    PerfilRouter --> AlterarSenhaUseCase
+    UsuarioRepositoryImpl --> Usuario
+`
+
+### 10.2 MS2 - Empresas
+
+`mermaid
+classDiagram
+    class Empresa
+    class Membro
+    class Solicitacao
+    class Papel
+
+    class IEmpresaRepository {<<interface>>}
+    class IMembroRepository {<<interface>>}
+    class ISolicitacaoRepository {<<interface>>}
+    class IPapelRepository {<<interface>>}
+
+    class EmpresaRepositoryImpl
+    class MembroRepositoryImpl
+    class SolicitacaoRepositoryImpl
+    class PapelRepositoryImpl
+
+    class CriarEmpresaUseCase
+    class EditarEmpresaUseCase
+    class DeletarEmpresaUseCase
+    class SolicitarAcessoUseCase
+    class GerenciarSolicitacaoUseCase
+    class AlterarRoleMembroUseCase
+    class SairEmpresaUseCase
+    class EmpresaRouter
+
+    IEmpresaRepository <|.. EmpresaRepositoryImpl
+    IMembroRepository <|.. MembroRepositoryImpl
+    ISolicitacaoRepository <|.. SolicitacaoRepositoryImpl
+    IPapelRepository <|.. PapelRepositoryImpl
+
+    CriarEmpresaUseCase --> IEmpresaRepository
+    CriarEmpresaUseCase --> IMembroRepository
+    CriarEmpresaUseCase --> IPapelRepository
+    EditarEmpresaUseCase --> IEmpresaRepository
+    EditarEmpresaUseCase --> IMembroRepository
+    DeletarEmpresaUseCase --> IEmpresaRepository
+    SolicitarAcessoUseCase --> ISolicitacaoRepository
+    SolicitarAcessoUseCase --> IMembroRepository
+    GerenciarSolicitacaoUseCase --> ISolicitacaoRepository
+    GerenciarSolicitacaoUseCase --> IMembroRepository
+    GerenciarSolicitacaoUseCase --> IEmpresaRepository
+    AlterarRoleMembroUseCase --> IMembroRepository
+    AlterarRoleMembroUseCase --> IEmpresaRepository
+    SairEmpresaUseCase --> IMembroRepository
+    SairEmpresaUseCase --> IEmpresaRepository
+    EmpresaRouter --> CriarEmpresaUseCase
+    EmpresaRouter --> EditarEmpresaUseCase
+    EmpresaRouter --> DeletarEmpresaUseCase
+`
+
+### 10.3 MS3 - Projetos
+
+`mermaid
+classDiagram
+    class Projeto
+    class MembroProjeto
+    class SolicitacaoProjeto
+
+    class IProjetoRepository {<<interface>>}
+    class IMembroProjetoRepository {<<interface>>}
+    class ISolicitacaoProjetoRepository {<<interface>>}
+
+    class ProjetoRepositoryImpl
+    class MembroProjetoRepositoryImpl
+    class SolicitacaoProjetoRepositoryImpl
+
+    class CriarProjetoUseCase
+    class EditarProjetoUseCase
+    class ArquivarProjetoUseCase
+    class DesarquivarProjetoUseCase
+    class DeletarProjetoUseCase
+    class SolicitarAcessoProjetoUseCase
+    class GerenciarSolicitacaoProjetoUseCase
+    class SairProjetoUseCase
+    class OcultarProjetosPorEmpresaUseCase
+    class ProjetoRouter
+
+    IProjetoRepository <|.. ProjetoRepositoryImpl
+    IMembroProjetoRepository <|.. MembroProjetoRepositoryImpl
+    ISolicitacaoProjetoRepository <|.. SolicitacaoProjetoRepositoryImpl
+
+    CriarProjetoUseCase --> IProjetoRepository
+    CriarProjetoUseCase --> IMembroProjetoRepository
+    EditarProjetoUseCase --> IProjetoRepository
+    EditarProjetoUseCase --> IMembroProjetoRepository
+    ArquivarProjetoUseCase --> IProjetoRepository
+    ArquivarProjetoUseCase --> IMembroProjetoRepository
+    DesarquivarProjetoUseCase --> IProjetoRepository
+    DesarquivarProjetoUseCase --> IMembroProjetoRepository
+    DeletarProjetoUseCase --> IProjetoRepository
+    DeletarProjetoUseCase --> IMembroProjetoRepository
+    SolicitarAcessoProjetoUseCase --> ISolicitacaoProjetoRepository
+    SolicitarAcessoProjetoUseCase --> IMembroProjetoRepository
+    GerenciarSolicitacaoProjetoUseCase --> ISolicitacaoProjetoRepository
+    GerenciarSolicitacaoProjetoUseCase --> IMembroProjetoRepository
+    SairProjetoUseCase --> IMembroProjetoRepository
+    SairProjetoUseCase --> IProjetoRepository
+    OcultarProjetosPorEmpresaUseCase --> IProjetoRepository
+    OcultarProjetosPorEmpresaUseCase --> IMembroProjetoRepository
+    ProjetoRouter --> CriarProjetoUseCase
+    ProjetoRouter --> EditarProjetoUseCase
+    ProjetoRouter --> DeletarProjetoUseCase
+---
+
+## 11. Instalação e Execução
+
+### 11.1 Pré-requisitos
 - Python 3.11+
 - PostgreSQL
-- PowerShell (Windows) para script automatizado
 
-### 10.2 Variáveis de ambiente
+### 11.2 Variáveis de ambiente
 
 #### Backends (`docuia-auth`, `docuia-empresas`, `docuia-projetos`)
 - `DATABASE_URL`
@@ -714,7 +869,7 @@ sequenceDiagram
 - `DIAGRAMAS_FRONTEND_URL`
 - `RELATORIOS_FRONTEND_URL`
 
-### 10.3 Instalação manual (por serviço)
+### 11.3 Instalação manual (por serviço)
 1. Entrar na pasta do serviço.
 2. Criar ambiente virtual: `python -m venv .venv`
 3. Ativar ambiente virtual.
@@ -728,15 +883,7 @@ Portas padrão:
 - `8003`: projetos
 - `5000`: frontend
 
-### 10.4 Execução local automatizada
-- Script raiz: `rodar_tudo.ps1`
-- Funções do script:
-  - tenta liberar portas ocupadas;
-  - cria `.venv` se necessário;
-  - instala dependências;
-  - inicia todos os serviços.
-
-### 10.5 Banco de dados local
+### 11.4 Banco de dados local
 - Criar 3 bancos PostgreSQL:
   - `ms1_db`
   - `ms2_db`
@@ -744,15 +891,15 @@ Portas padrão:
 - Ajustar `DATABASE_URL` de cada serviço.
 - Tabelas são criadas automaticamente com `create_all`.
 
-### 10.6 Migrations
+### 11.5 Migrations
 - Não há ferramenta de migration versionada.
 - Ajustes pontuais de schema são feitos em runtime em `MS2` e `MS3` para coluna `mensagem`.
 
-### 10.7 Build e deploy (produção)
+### 11.6 Build e deploy (produção)
 - Deploy automático no Azure Web App via GitHub Actions em push para `main`.
 - Um workflow por repositório (`.github/workflows/main_*.yml`).
 
-### 10.8 Docker
+### 11.7 Docker
 - Não existe configuração Docker no estado atual do código.
 - Para uso em Docker será necessário criar:
   - `Dockerfile` por serviço
@@ -760,7 +907,7 @@ Portas padrão:
 
 ---
 
-## 11. Repositórios Relacionados
+## 12. Repositórios Relacionados
 
 | Repositório | Finalidade | Tecnologias | Relação com o sistema | Link |
 |---|---|---|---|---|
@@ -771,7 +918,7 @@ Portas padrão:
 
 ---
 
-## 12. Decisões Técnicas e Trade-offs
+## 13. Decisões Técnicas e Trade-offs
 
 ### Decisões encontradas
 - Microserviços separados por domínio.
@@ -789,40 +936,37 @@ Portas padrão:
 
 ---
 
-## 13. Problemas e Soluções
+## 14. Problemas e Soluções
 
-### 13.1 Problemas técnicos observados e soluções implementadas
+### 14.1 Problemas técnicos observados e soluções implementadas
 
-1. Limite de senha com bcrypt no ambiente Azure  
+1. Limite de senha com bcrypt no ambiente Azure
 Solução: configuração de hash priorizando `pbkdf2_sha256` (com fallback `bcrypt`).
 
-2. Evolução de schema sem migration tool  
+2. Evolução de schema sem migration tool
 Solução: função `_ensure_schema()` em MS2/MS3 para garantir coluna `mensagem`.
 
-3. Exclusão lógica com dependência entre domínios  
+3. Exclusão lógica com dependência entre domínios
 Solução: ao excluir empresa, MS2 dispara ocultação de projetos no MS3 (best effort).
 
-4. Sessões antigas ocupando portas em ambiente local  
-Solução: `rodar_tudo.ps1` identifica processos por porta e tenta encerrá-los antes de subir.
-
-5. Risco de enumeração de email no “esqueci senha”  
+4. Risco de enumeração de email no "esqueci senha"・
 Solução: resposta neutra quando email não existe.
 
-### 13.2 Limitações atuais
+### 14.2 Limitações atuais
 - Sem suíte de testes automatizada no código analisado.
 - Sem Docker oficial.
 - Sem migration versionada.
 - Endpoint `/perfil/usuarios/batch` sem autenticação explícita.
 - Permissões e papéis modelados parcialmente como string CSV (difícil governança fina).
 
-### 13.3 Otimizações já presentes
+### 14.3 Otimizações já presentes
 - Cache local de perfil do usuário no frontend.
 - Endpoints de “recentes” com ordenação por último acesso.
 - Deduplicação de IDs no batch de usuários.
 
 ---
 
-## 14. Conclusão
+## 15. Conclusão
 
 ### Resultados obtidos
 - Ecossistema funcional de microserviços com autenticação, gestão de empresas/projetos e UI integrada.
@@ -875,4 +1019,5 @@ curl -X POST http://localhost:8003/projetos \
   -H "Content-Type: application/json" \
   -d "{\"nome\":\"Projeto 1\",\"descricao\":\"Piloto\",\"empresa_id\":1}"
 ```
+
 
