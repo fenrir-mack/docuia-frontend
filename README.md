@@ -698,35 +698,96 @@ sequenceDiagram
 
 ```mermaid
 classDiagram
+    direction LR
+
     class Usuario {
-      +int? id
+      +int id
       +str nome
       +str email
       +str senha_hash
       +str cargo
       +datetime criado_em
-      +tem_dados_completos() bool
+      +tem_dados_completos()
     }
 
     class IUsuarioRepository {
       <<interface>>
-      +salvar(usuario) Usuario
-      +buscar_por_email(email) Usuario?
-      +buscar_por_id(id) Usuario?
-      +atualizar(usuario) Usuario
+      +salvar(usuario)
+      +buscar_por_email(email)
+      +buscar_por_id(id)
+      +atualizar(usuario)
     }
 
-    class UsuarioRepositoryImpl
-    class LoginUseCase
-    class CadastroUseCase
-    class RecuperarSenhaUseCase
-    class RedefinirSenhaUseCase
-    class EditarPerfilUseCase
-    class AlterarSenhaUseCase
-    class AuthRouter
-    class PerfilRouter
+    class UsuarioRepositoryImpl {
+      +salvar(usuario)
+      +buscar_por_email(email)
+      +buscar_por_id(id)
+      +atualizar(usuario)
+      -_para_entidade(model)
+    }
+
+    class UsuarioModel {
+      +int id
+      +str nome
+      +str email
+      +str senha_hash
+      +str cargo
+      +datetime criado_em
+    }
+
+    class LoginUseCase {
+      +executar(email, senha)
+    }
+
+    class CadastroUseCase {
+      +executar(nome, cargo, email, senha)
+    }
+
+    class RecuperarSenhaUseCase {
+      +executar(email)
+    }
+
+    class RedefinirSenhaUseCase {
+      +executar(token, nova_senha)
+    }
+
+    class EditarPerfilUseCase {
+      +executar(usuario_id, nome, cargo)
+    }
+
+    class AlterarSenhaUseCase {
+      +executar(usuario_id, senha_atual, nova_senha)
+    }
+
+    class AuthRouter {
+      +login(dados)
+      +cadastro(dados)
+      +esqueceu_senha(dados)
+      +redefinir_senha(dados)
+    }
+
+    class PerfilRouter {
+      +meu_perfil()
+      +obter_usuarios_batch(ids)
+      +editar_perfil(dados)
+      +alterar_senha(dados)
+    }
+
+    class AuthSchemas {
+      +LoginInput
+      +CadastroInput
+      +RecuperarSenhaInput
+      +RedefinirSenhaInput
+    }
+
+    class PerfilSchemas {
+      +EditarPerfilInput
+      +AlterarSenhaInput
+    }
 
     IUsuarioRepository <|.. UsuarioRepositoryImpl
+    UsuarioRepositoryImpl --> UsuarioModel
+    UsuarioRepositoryImpl --> Usuario
     LoginUseCase --> IUsuarioRepository
     CadastroUseCase --> IUsuarioRepository
     RecuperarSenhaUseCase --> IUsuarioRepository
@@ -737,50 +798,218 @@ classDiagram
     AuthRouter --> CadastroUseCase
     AuthRouter --> RecuperarSenhaUseCase
     AuthRouter --> RedefinirSenhaUseCase
+    AuthRouter --> AuthSchemas
     PerfilRouter --> EditarPerfilUseCase
     PerfilRouter --> AlterarSenhaUseCase
-    UsuarioRepositoryImpl --> Usuario
+    PerfilRouter --> PerfilSchemas
 ```
 
 ### 10.2 MS2 - Empresas
 
 ```mermaid
 classDiagram
-    class Empresa
-    class Membro
-    class Solicitacao
-    class Papel
+    direction LR
 
-    class IEmpresaRepository {<<interface>>}
-    class IMembroRepository {<<interface>>}
-    class ISolicitacaoRepository {<<interface>>}
-    class IPapelRepository {<<interface>>}
+    class Empresa {
+      +int id
+      +str nome
+      +str descricao
+      +int dono_id
+      +str cor
+      +str status
+      +datetime criado_em
+    }
+
+    class Membro {
+      +int id
+      +int empresa_id
+      +int usuario_id
+      +str role
+      +datetime criado_em
+    }
+
+    class Solicitacao {
+      +int id
+      +int empresa_id
+      +int usuario_id
+      +str mensagem
+      +str status
+      +datetime criado_em
+    }
+
+    class Papel {
+      +int id
+      +int empresa_id
+      +str nome
+      +str descricao
+      +str permissoes
+    }
+
+    class AcessoEmpresaModel {
+      +int id
+      +int empresa_id
+      +int usuario_id
+      +datetime ultimo_acesso_em
+    }
+
+    class IEmpresaRepository {
+      <<interface>>
+      +salvar(empresa)
+      +buscar_por_id(id)
+      +listar_por_usuario(usuario_id)
+      +atualizar(empresa)
+      +deletar(id)
+    }
+
+    class IMembroRepository {
+      <<interface>>
+      +adicionar(membro)
+      +listar_por_empresa(empresa_id)
+      +buscar(empresa_id, usuario_id)
+      +remover(empresa_id, usuario_id)
+    }
+
+    class ISolicitacaoRepository {
+      <<interface>>
+      +salvar(solicitacao)
+      +listar_por_empresa(empresa_id)
+      +buscar_por_id(id)
+      +atualizar_status(id, status)
+    }
+
+    class IPapelRepository {
+      <<interface>>
+      +listar_por_empresa(empresa_id)
+      +buscar_por_id(id)
+      +salvar(papel)
+      +deletar(id)
+    }
 
     class EmpresaRepositoryImpl
     class MembroRepositoryImpl
     class SolicitacaoRepositoryImpl
     class PapelRepositoryImpl
 
-    class CriarEmpresaUseCase
-    class EditarEmpresaUseCase
-    class DeletarEmpresaUseCase
-    class SolicitarAcessoUseCase
-    class GerenciarSolicitacaoUseCase
-    class AlterarRoleMembroUseCase
-    class SairEmpresaUseCase
-    class EmpresaRouter
+    class EmpresaModel
+    class MembroModel
+    class SolicitacaoModel
+    class PapelModel
+
+    class ListarEmpresasUseCase {
+      +executar(usuario_id)
+    }
+
+    class CriarEmpresaUseCase {
+      +executar(nome, descricao, usuario_id)
+    }
+
+    class EditarEmpresaUseCase {
+      +executar(empresa_id, nome, descricao, usuario_id)
+    }
+
+    class DeletarEmpresaUseCase {
+      +executar(empresa_id, usuario_id)
+    }
+
+    class ListarMembrosUseCase {
+      +executar(empresa_id)
+    }
+
+    class RemoverMembroUseCase {
+      +executar(empresa_id, usuario_id_alvo, usuario_id_solicitante)
+    }
+
+    class SairEmpresaUseCase {
+      +executar(empresa_id, usuario_id)
+    }
+
+    class SolicitarAcessoUseCase {
+      +executar(empresa_id, usuario_id, mensagem)
+    }
+
+    class GerenciarSolicitacaoUseCase {
+      +executar(solicitacao_id, acao, usuario_id_solicitante)
+    }
+
+    class AlterarRoleMembroUseCase {
+      +executar(empresa_id, usuario_id_alvo, novo_role, usuario_id_solicitante)
+    }
+
+    class ListarPapeisUseCase {
+      +executar(empresa_id)
+    }
+
+    class CriarPapelUseCase {
+      +executar(empresa_id, nome, descricao, permissoes)
+    }
+
+    class EditarPapelUseCase {
+      +executar(papel_id, nome, descricao, permissoes)
+    }
+
+    class DeletarPapelUseCase {
+      +executar(papel_id)
+    }
+
+    class EmpresaRouter {
+      +listar_empresas()
+      +listar_empresas_recentes()
+      +registrar_acesso_empresa()
+      +criar_empresa()
+      +detalhe_empresa()
+      +editar_empresa()
+      +deletar_empresa()
+      +listar_membros()
+      +remover_membro()
+      +sair_da_empresa()
+      +alterar_role_membro()
+      +listar_solicitacoes()
+      +solicitar_acesso()
+      +gerenciar_solicitacao()
+      +listar_papeis()
+      +criar_papel()
+      +editar_papel()
+      +deletar_papel()
+    }
+
+    class EmpresaSchemas {
+      +EmpresaInput
+      +SolicitarAcessoInput
+      +SolicitacaoAcaoInput
+      +AlterarRoleInput
+      +PapelInput
+    }
 
     IEmpresaRepository <|.. EmpresaRepositoryImpl
     IMembroRepository <|.. MembroRepositoryImpl
     ISolicitacaoRepository <|.. SolicitacaoRepositoryImpl
     IPapelRepository <|.. PapelRepositoryImpl
 
+    EmpresaRepositoryImpl --> EmpresaModel
+    EmpresaRepositoryImpl --> Empresa
+    MembroRepositoryImpl --> MembroModel
+    MembroRepositoryImpl --> Membro
+    SolicitacaoRepositoryImpl --> SolicitacaoModel
+    SolicitacaoRepositoryImpl --> Solicitacao
+    PapelRepositoryImpl --> PapelModel
+    PapelRepositoryImpl --> Papel
+    EmpresaModel "1" --> "0..*" MembroModel
+    EmpresaModel "1" --> "0..*" SolicitacaoModel
+    EmpresaModel "1" --> "0..*" PapelModel
+    EmpresaModel "1" --> "0..*" AcessoEmpresaModel
+
+    ListarEmpresasUseCase --> IEmpresaRepository
     CriarEmpresaUseCase --> IEmpresaRepository
     CriarEmpresaUseCase --> IMembroRepository
     CriarEmpresaUseCase --> IPapelRepository
     EditarEmpresaUseCase --> IEmpresaRepository
     EditarEmpresaUseCase --> IMembroRepository
     DeletarEmpresaUseCase --> IEmpresaRepository
+    ListarMembrosUseCase --> IMembroRepository
+    RemoverMembroUseCase --> IMembroRepository
+    RemoverMembroUseCase --> IEmpresaRepository
+    SairEmpresaUseCase --> IMembroRepository
+    SairEmpresaUseCase --> IEmpresaRepository
     SolicitarAcessoUseCase --> ISolicitacaoRepository
     SolicitarAcessoUseCase --> IMembroRepository
     GerenciarSolicitacaoUseCase --> ISolicitacaoRepository
@@ -788,44 +1017,196 @@ classDiagram
     GerenciarSolicitacaoUseCase --> IEmpresaRepository
     AlterarRoleMembroUseCase --> IMembroRepository
     AlterarRoleMembroUseCase --> IEmpresaRepository
-    SairEmpresaUseCase --> IMembroRepository
-    SairEmpresaUseCase --> IEmpresaRepository
+    ListarPapeisUseCase --> IPapelRepository
+    CriarPapelUseCase --> IPapelRepository
+    EditarPapelUseCase --> IPapelRepository
+    DeletarPapelUseCase --> IPapelRepository
+
+    EmpresaRouter --> ListarEmpresasUseCase
     EmpresaRouter --> CriarEmpresaUseCase
     EmpresaRouter --> EditarEmpresaUseCase
     EmpresaRouter --> DeletarEmpresaUseCase
+    EmpresaRouter --> ListarMembrosUseCase
+    EmpresaRouter --> RemoverMembroUseCase
+    EmpresaRouter --> SairEmpresaUseCase
+    EmpresaRouter --> SolicitarAcessoUseCase
+    EmpresaRouter --> GerenciarSolicitacaoUseCase
+    EmpresaRouter --> AlterarRoleMembroUseCase
+    EmpresaRouter --> ListarPapeisUseCase
+    EmpresaRouter --> CriarPapelUseCase
+    EmpresaRouter --> EditarPapelUseCase
+    EmpresaRouter --> DeletarPapelUseCase
+    EmpresaRouter --> EmpresaSchemas
 ```
 
 ### 10.3 MS3 - Projetos
 
 ```mermaid
 classDiagram
-    class Projeto
-    class MembroProjeto
-    class SolicitacaoProjeto
+    direction LR
 
-    class IProjetoRepository {<<interface>>}
-    class IMembroProjetoRepository {<<interface>>}
-    class ISolicitacaoProjetoRepository {<<interface>>}
+    class Projeto {
+      +int id
+      +str nome
+      +str descricao
+      +int empresa_id
+      +str cor
+      +str status
+      +datetime criado_em
+    }
+
+    class MembroProjeto {
+      +int id
+      +int projeto_id
+      +int usuario_id
+      +str role
+      +datetime criado_em
+    }
+
+    class SolicitacaoProjeto {
+      +int id
+      +int projeto_id
+      +int usuario_id
+      +str mensagem
+      +str status
+      +datetime criado_em
+    }
+
+    class AcessoProjetoModel {
+      +int id
+      +int projeto_id
+      +int usuario_id
+      +datetime ultimo_acesso_em
+    }
+
+    class IProjetoRepository {
+      <<interface>>
+      +salvar(projeto)
+      +buscar_por_id(id)
+      +listar_por_usuario(usuario_id)
+      +listar_por_empresa(empresa_id)
+      +atualizar(projeto)
+      +deletar(id)
+      +ocultar_por_empresa(empresa_id)
+    }
+
+    class IMembroProjetoRepository {
+      <<interface>>
+      +adicionar(membro)
+      +listar_por_projeto(projeto_id)
+      +buscar(projeto_id, usuario_id)
+      +remover(projeto_id, usuario_id)
+    }
+
+    class ISolicitacaoProjetoRepository {
+      <<interface>>
+      +salvar(solicitacao)
+      +listar_por_projeto(projeto_id)
+      +buscar_pendente(projeto_id, usuario_id)
+      +buscar_por_id(id)
+      +atualizar_status(id, status)
+    }
 
     class ProjetoRepositoryImpl
     class MembroProjetoRepositoryImpl
     class SolicitacaoProjetoRepositoryImpl
 
-    class CriarProjetoUseCase
-    class EditarProjetoUseCase
-    class ArquivarProjetoUseCase
-    class DesarquivarProjetoUseCase
-    class DeletarProjetoUseCase
-    class SolicitarAcessoProjetoUseCase
-    class GerenciarSolicitacaoProjetoUseCase
-    class SairProjetoUseCase
-    class OcultarProjetosPorEmpresaUseCase
-    class ProjetoRouter
+    class ProjetoModel
+    class MembroProjetoModel
+    class SolicitacaoProjetoModel
+
+    class ListarProjetosUseCase {
+      +executar(usuario_id)
+    }
+
+    class ListarProjetosPorEmpresaUseCase {
+      +executar(empresa_id)
+    }
+
+    class CriarProjetoUseCase {
+      +executar(nome, descricao, empresa_id, usuario_id)
+    }
+
+    class EditarProjetoUseCase {
+      +executar(projeto_id, nome, descricao, usuario_id)
+    }
+
+    class ArquivarProjetoUseCase {
+      +executar(projeto_id, usuario_id)
+    }
+
+    class DesarquivarProjetoUseCase {
+      +executar(projeto_id, usuario_id)
+    }
+
+    class DeletarProjetoUseCase {
+      +executar(projeto_id, usuario_id)
+    }
+
+    class ListarMembrosProjetoUseCase {
+      +executar(projeto_id)
+    }
+
+    class SolicitarAcessoProjetoUseCase {
+      +executar(projeto_id, usuario_id, mensagem)
+    }
+
+    class GerenciarSolicitacaoProjetoUseCase {
+      +executar(solicitacao_id, acao, usuario_id_solicitante)
+    }
+
+    class SairProjetoUseCase {
+      +executar(projeto_id, usuario_id)
+    }
+
+    class OcultarProjetosPorEmpresaUseCase {
+      +executar(empresa_id, usuario_id)
+    }
+
+    class ProjetoRouter {
+      +listar_projetos()
+      +listar_projetos_recentes()
+      +registrar_acesso_projeto()
+      +listar_projetos_por_empresa()
+      +criar_projeto()
+      +detalhe_projeto()
+      +editar_projeto()
+      +arquivar_projeto()
+      +desarquivar_projeto()
+      +deletar_projeto()
+      +listar_membros()
+      +sair_do_projeto()
+      +ocultar_projetos_da_empresa()
+      +listar_papeis_projeto()
+      +listar_solicitacoes()
+      +solicitar_acesso()
+      +gerenciar_solicitacao()
+    }
+
+    class ProjetoSchemas {
+      +ProjetoInput
+      +ProjetoEditInput
+      +SolicitarAcessoInput
+      +SolicitacaoAcaoInput
+      +PapelProjetoOut
+    }
 
     IProjetoRepository <|.. ProjetoRepositoryImpl
     IMembroProjetoRepository <|.. MembroProjetoRepositoryImpl
     ISolicitacaoProjetoRepository <|.. SolicitacaoProjetoRepositoryImpl
 
+    ProjetoRepositoryImpl --> ProjetoModel
+    ProjetoRepositoryImpl --> Projeto
+    MembroProjetoRepositoryImpl --> MembroProjetoModel
+    MembroProjetoRepositoryImpl --> MembroProjeto
+    SolicitacaoProjetoRepositoryImpl --> SolicitacaoProjetoModel
+    SolicitacaoProjetoRepositoryImpl --> SolicitacaoProjeto
+    ProjetoModel "1" --> "0..*" MembroProjetoModel
+    ProjetoModel "1" --> "0..*" SolicitacaoProjetoModel
+    ProjetoModel "1" --> "0..*" AcessoProjetoModel
+
+    ListarProjetosUseCase --> IProjetoRepository
+    ListarProjetosPorEmpresaUseCase --> IProjetoRepository
     CriarProjetoUseCase --> IProjetoRepository
     CriarProjetoUseCase --> IMembroProjetoRepository
     EditarProjetoUseCase --> IProjetoRepository
@@ -836,6 +1217,7 @@ classDiagram
     DesarquivarProjetoUseCase --> IMembroProjetoRepository
     DeletarProjetoUseCase --> IProjetoRepository
     DeletarProjetoUseCase --> IMembroProjetoRepository
+    ListarMembrosProjetoUseCase --> IMembroProjetoRepository
     SolicitarAcessoProjetoUseCase --> ISolicitacaoProjetoRepository
     SolicitarAcessoProjetoUseCase --> IMembroProjetoRepository
     GerenciarSolicitacaoProjetoUseCase --> ISolicitacaoProjetoRepository
@@ -844,9 +1226,263 @@ classDiagram
     SairProjetoUseCase --> IProjetoRepository
     OcultarProjetosPorEmpresaUseCase --> IProjetoRepository
     OcultarProjetosPorEmpresaUseCase --> IMembroProjetoRepository
+    ProjetoRouter --> ListarProjetosUseCase
+    ProjetoRouter --> ListarProjetosPorEmpresaUseCase
     ProjetoRouter --> CriarProjetoUseCase
     ProjetoRouter --> EditarProjetoUseCase
+    ProjetoRouter --> ArquivarProjetoUseCase
+    ProjetoRouter --> DesarquivarProjetoUseCase
     ProjetoRouter --> DeletarProjetoUseCase
+    ProjetoRouter --> ListarMembrosProjetoUseCase
+    ProjetoRouter --> SolicitarAcessoProjetoUseCase
+    ProjetoRouter --> GerenciarSolicitacaoProjetoUseCase
+    ProjetoRouter --> SairProjetoUseCase
+    ProjetoRouter --> OcultarProjetosPorEmpresaUseCase
+    ProjetoRouter --> ProjetoSchemas
+```
+
+### 10.4 Frontend - Componentes e páginas
+
+O frontend atual não define classes JavaScript ou entidades de domínio próprias. O diagrama abaixo representa os componentes reais do projeto como classes conceituais: servidor FastAPI, templates Jinja2, scripts compartilhados, armazenamento local, estilos, imagens e integrações externas.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class FrontendApp {
+      +FastAPIApp
+      +mountStatic()
+      +templates
+      +runUvicorn()
+    }
+
+    class ApiConfigEndpoint {
+      +renderApiConfigJs()
+      +AUTH_API_URL
+      +EMPRESAS_API_URL
+      +PROJETOS_API_URL
+      +UPLOAD_FRONTEND_URL
+      +DIAGRAMAS_FRONTEND_URL
+      +RELATORIOS_FRONTEND_URL
+    }
+
+    class PageRoutes {
+      +renderLogin()
+      +postLogin()
+      +renderCadastro()
+      +postCadastro()
+      +renderEsqueceuSenha()
+      +postEsqueceuSenha()
+      +renderConfirmacaoSenha()
+      +renderCriarSenha()
+      +postCriarSenha()
+      +renderDashboard()
+      +renderPerfil()
+      +renderListaEmpresas()
+      +renderEmpresa()
+      +renderEmpresaMembros()
+      +renderEmpresaSolicitacoes()
+      +renderEmpresaConfiguracoes()
+      +renderListaProjetos()
+      +renderProjeto()
+      +renderProjetoMembros()
+      +renderProjetoSolicitacoes()
+      +renderProjetoConfiguracoes()
+    }
+
+    class JinjaTemplates {
+      +templateResponse(template, request)
+      +urlForStatic()
+    }
+
+    class ApiClient {
+      +getToken()
+      +setToken(token)
+      +removeToken()
+      +authHeaders()
+      +handleResponse(response)
+      +getUserProfile(forceRefresh)
+    }
+
+    class AuthGuard {
+      +verificaToken()
+      +redirecionaParaLogin()
+      +publicPages
+    }
+
+    class BrowserStorage {
+      +token
+      +userData
+      +user_id
+      +pinnedCompanyIds
+      +companyColor
+    }
+
+    class AuthPages {
+      +loginHtml
+      +cadastroHtml
+      +esqueceuSenhaHtml
+      +confirmacaoSenhaHtml
+      +criarSenhaHtml
+      +loginFormSubmit()
+      +cadastroFormSubmit()
+      +serverSidePasswordPosts()
+    }
+
+    class DashboardPage {
+      +dashboardHtml
+      +loadDashboardData()
+      +renderCompanies()
+      +renderProjects()
+      +renderArchivedProjects()
+      +renderProjectRequests()
+    }
+
+    class PerfilPage {
+      +perfilHtml
+      +loadProfile()
+      +submitPerfil()
+      +submitSenha()
+    }
+
+    class ListaEmpresasPage {
+      +listaEmpresasHtml
+      +loadCompanies()
+      +renderCompanies()
+      +applyCompanySearch()
+      +sortCompanies()
+      +togglePinnedCompany()
+      +submitCreateCompany()
+      +submitJoinCompany()
+    }
+
+    class EmpresaPages {
+      +empresaHtml
+      +empresaMembrosHtml
+      +empresaSolicitacoesHtml
+      +empresaConfiguracoesHtml
+      +loadCompanyDetails()
+      +loadMembersPage()
+      +loadSolicitacoesPage()
+      +loadConfigPage()
+      +renderProjects()
+      +renderMembers()
+      +renderSolicitacoes()
+      +alterarRole()
+      +removerMembro()
+      +gerenciarSolicitacao()
+      +submitCreateProject()
+      +submitRequestAccess()
+      +excluirEmpresa()
+      +sairDaEmpresa()
+    }
+
+    class ListaProjetosPage {
+      +listaProjetosHtml
+      +loadProjects()
+      +renderProjects()
+      +applyCurrentFilter()
+      +archiveProject()
+      +unarchiveProject()
+      +submitCreateProject()
+    }
+
+    class ProjetoPages {
+      +projetoHtml
+      +projetoMembrosHtml
+      +projetoSolicitacoesHtml
+      +projetoConfiguracoesHtml
+      +loadProjectDetails()
+      +loadMembersPage()
+      +loadSolicitacoesPage()
+      +loadConfigPage()
+      +renderMembers()
+      +renderSolicitacoes()
+      +gerenciarSolicitacao()
+      +syncArchiveButton()
+      +sairDoProjeto()
+    }
+
+    class SidebarComponent {
+      +sidebarPartialHtml
+      +toggleUserMenu()
+      +active_page
+      +logoutLink
+    }
+
+    class ThemeHelpers {
+      +resolveProjectColor()
+      +resolveAccentColor()
+      +applyProjectTabsTheme()
+      +applyCompanyTabsTheme()
+      +applyCompanyColor()
+      +persistCompanyColor()
+    }
+
+    class StaticAssets {
+      +styleCss
+      +sidebarCss
+      +pngIcons
+    }
+
+    class BackendServices {
+      +MS1Auth
+      +MS2Empresas
+      +MS3Projetos
+    }
+
+    class ExternalFrontends {
+      +Upload
+      +Diagramas
+      +Relatorios
+    }
+
+    FrontendApp --> ApiConfigEndpoint
+    FrontendApp --> PageRoutes
+    FrontendApp --> JinjaTemplates
+    FrontendApp --> StaticAssets
+
+    PageRoutes --> AuthPages
+    PageRoutes --> DashboardPage
+    PageRoutes --> PerfilPage
+    PageRoutes --> ListaEmpresasPage
+    PageRoutes --> EmpresaPages
+    PageRoutes --> ListaProjetosPage
+    PageRoutes --> ProjetoPages
+
+    AuthPages --> ApiClient
+    DashboardPage --> AuthGuard
+    DashboardPage --> ApiClient
+    PerfilPage --> AuthGuard
+    PerfilPage --> ApiClient
+    ListaEmpresasPage --> AuthGuard
+    ListaEmpresasPage --> ApiClient
+    EmpresaPages --> AuthGuard
+    EmpresaPages --> ApiClient
+    ListaProjetosPage --> AuthGuard
+    ListaProjetosPage --> ApiClient
+    ProjetoPages --> AuthGuard
+    ProjetoPages --> ApiClient
+
+    DashboardPage --> SidebarComponent
+    PerfilPage --> SidebarComponent
+    ListaEmpresasPage --> SidebarComponent
+    EmpresaPages --> SidebarComponent
+    ListaProjetosPage --> SidebarComponent
+    ProjetoPages --> SidebarComponent
+
+    EmpresaPages --> ThemeHelpers
+    ProjetoPages --> ThemeHelpers
+    ListaProjetosPage --> ThemeHelpers
+    DashboardPage --> ThemeHelpers
+
+    ApiClient --> BrowserStorage
+    AuthGuard --> BrowserStorage
+    ListaEmpresasPage --> BrowserStorage
+    ThemeHelpers --> BrowserStorage
+    ApiClient --> BackendServices
+    ApiConfigEndpoint --> BackendServices
+    ProjetoPages --> ExternalFrontends
 ```
 ---
 
@@ -1020,5 +1656,3 @@ curl -X POST http://localhost:8003/projetos \
   -H "Content-Type: application/json" \
   -d "{\"nome\":\"Projeto 1\",\"descricao\":\"Piloto\",\"empresa_id\":1}"
 ```
-
-
